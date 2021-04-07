@@ -2,7 +2,7 @@ import * as http from 'http'
 import * as https from 'https'
 import ws from 'ws'
 
-import logger from '@i3-market/logger'
+import logger from '../logger'
 
 import { WebSocketRouter } from './router'
 import { IRouter, Request, RouteHandler, Socket, socketTag } from './utils'

@@ -4,9 +4,9 @@ import { getResolver } from 'ethr-did-resolver'
 import { Resolver } from 'did-resolver'
 // import { decodeJWT } from "did-jwt"
 
-import logger from '@i3-market/logger'
-import config from '@i3-market/config'
-import { SocketHandler } from '@i3-market/ws/utils'
+import logger from '../../logger'
+import config from '../../config'
+import { SocketHandler } from '../../ws/utils'
 import WebSocketServer from '../../ws'
 
 const transports = require('uport-transports').transport

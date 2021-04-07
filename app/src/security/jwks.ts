@@ -4,7 +4,7 @@ import { AsymmetricSigningAlgorithm } from 'oidc-provider'
 import config from '../config'
 import { writeFile } from 'fs'
 import path from 'path'
-import logger from '@i3-market/logger'
+import logger from '../logger'
 
 const rootDir = path.resolve(__dirname, '../..')
 
