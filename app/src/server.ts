@@ -1,7 +1,7 @@
 import * as path from 'path'
 import express from 'express'
 import * as http from 'http'
-import * as ngrok from 'ngrok'
+
 
 import config from './config'
 import logger, { loggerMiddleware } from './logger'
@@ -23,6 +23,27 @@ async function listenPromise (server: http.Server, port: number): Promise<void> 
  */
 export async function main (): Promise<void> {
 
+  if (config.isProd) {
+    logger.info('Using production environment')
+  }
+
+
+  const port = config.port
+
+  // Connect to ngrok
+  if (config.isProd && config.useNgrok) {
+    throw new Error('You can\'t use NGROK in production. You may want to switch it off in your .env file')
+  }
+  if (config.useNgrok) {
+    const ngrok = await import('ngrok')
+    const ngrokUri = await ngrok.connect({ addr: port })
+    config.ngrokUri = ngrokUri
+  }
+
+  // Initialise server comunications variables
+  const publicUri = config.publicUri
+  const url = new URL(publicUri)
+  config.host = url.host
 
   // Intialize jwks
   await jwks({ keys: ['RS256', 'PS256', 'ES256', 'EdDSA'] })
@@ -54,6 +75,7 @@ export async function main (): Promise<void> {
     logger.warn('Setting up x-forwarded-proto header as https. Note that it should be only used in development!')
     app.use((req, res, next) => {
       req.headers['x-forwarded-proto'] = 'https'      
+      req.headers.host = config.host
       next()
     })
   }
@@ -69,14 +91,9 @@ export async function main (): Promise<void> {
   app.use('/', express.static(publicDir))
 
   // Listen
-  const port = config.port
+  
   await listenPromise(server, port)
 
-  // Connect to ngrok
-  let publicUri = config.publicUri
-  if (config.useNgrok) {
-    publicUri = await ngrok.connect({ addr: port })
-  }
 
   // Log connection information
   logger.info(`Application is listening on port ${config.port}`)  

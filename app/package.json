@@ -35,6 +35,7 @@
     "@types/winston": "^2.4.4",
     "@types/ws": "^7.4.0",
     "glob": "^7.1.6",
+    "fs-extra": "^9.1.0",
     "node-alias": "^1.0.4",
     "nodemon": "^2.0.7",
     "rimraf": "^3.0.2",

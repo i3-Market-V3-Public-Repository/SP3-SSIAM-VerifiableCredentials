@@ -1,26 +1,36 @@
 // Dependencies
-import * as fs from 'fs'
+import * as fs from 'fs-extra'
 import * as path from 'path'
+import ts from 'typescript'
 import { promisify } from 'util'
 import { spawn, SpawnOptions } from 'child_process'
 
 // import * as glob from "glob"
 import rimraf from 'rimraf'
+// import glob from 'glob'
+
+const rootDir = path.resolve(__dirname, '..')
+const configPath = path.join(rootDir, 'tsconfig.json')
+
+const configFile = ts.readJsonConfigFile(configPath, (path) => fs.readFileSync(path, { encoding: 'utf-8'}))
+const tsConfig = ts.parseJsonSourceFileConfigFileContent(configFile, ts.sys, path.dirname(configPath))
+
+if (tsConfig.options.outDir === undefined) {
+  throw new Error('Cannot load outDir')
+}
+const dst = tsConfig.options.outDir
+
+interface CopyInfo {
+  src: string
+  dst: string
+  cwd?: string
+  opts?: fs.CopyOptions
+}
 
 // Global variables
-const cpPromise = promisify(fs.copyFile)
 // const globPromise = promisify(glob)
 const rmPromise = promisify(rimraf)
 
-async function cpFile (src: fs.PathLike, dst: fs.PathLike, flags?: number): Promise<void> {
-  const dstDir = path.dirname(dst.toString())
-  try {
-    fs.accessSync(dstDir, fs.constants.F_OK | fs.constants.W_OK)
-  } catch (error) {
-    fs.mkdirSync(dstDir)
-  }
-  return await cpPromise(src, dst, flags)
-}
 
 const spawnPromise = async (
   command: string, args: readonly string[], options: SpawnOptions
@@ -31,9 +41,6 @@ const spawnPromise = async (
   })
 })
 
-const rootDir = path.resolve(__dirname, '..')
-const dst = path.resolve(rootDir, 'build', 'src')
-// const src = path.resolve(rootDir, "src")
 
 // Methods
 const clean = async (): Promise<void> => {
@@ -48,23 +55,26 @@ const buildTypescript = async (): Promise<void> => {
 }
 
 // Add all the files that must be copied here
-const fetchCopyFiles = async (): Promise<string[]> => {
-  const files: string[] = []
+const fetchCopySrcs = async (): Promise<CopyInfo[]> => {
 
-  return files.concat(
-    ['package.json', 'package-lock.json']
-    // await globPromise("src/**/*.{json,yaml,yml}") // Copy all yaml files within src
-  )
+  return [
+    { src: 'public', dst, cwd: 'src' },
+    { src: 'views', dst, cwd: 'src' }
+  ]
 }
 
 const copy = async (): Promise<void> => {
-  const copyFiles = await fetchCopyFiles()
-  for (const copyFile of copyFiles) {
-    console.log(`Copying ${copyFile}...`)
-    await cpFile(
-      path.resolve(rootDir, copyFile),
-      path.resolve(dst, copyFile)
-    )
+  const cpInfos = await fetchCopySrcs()
+  for (const cpInfo of cpInfos) {
+    let from = rootDir
+    if (cpInfo.cwd) {
+      from = path.join(from, cpInfo.cwd)
+    }
+    from = path.join(from, cpInfo.src)
+    const to = path.resolve(dst, cpInfo.src)
+
+    console.log(`Copying from '${from}' to '${to}' ...`)
+    await fs.copy(from, to, cpInfo.opts)
   }
 }
 

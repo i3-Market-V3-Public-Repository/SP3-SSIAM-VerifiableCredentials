@@ -20,6 +20,8 @@ function generateRandomStrings (byteLength = 32, amount = 1): string[] {
 
 class Config {
   protected defaults: {[key: string]: string | undefined }
+  protected _ngrokUri?: string
+  protected _host?: string
 
   constructor () {
     const defaultPort = '3000'
@@ -51,7 +53,15 @@ class Config {
   protected fromBoolean: ConvertFunction<boolean> = (v) => v.toLocaleLowerCase() === '1'
   protected fromArray: ConvertFunction<string[]> = (v) => v.split(',')
   protected fromInteger: ConvertFunction<number> = parseInt
-  protected fromImport: <T>(v: string) => T = (v) => { return require(path.join(__dirname, '../', v)) } // TODO: Only relative path supported
+  protected fromImport: <T>(v: string) => T = (v) => {
+    // TODO: Only relative path supported
+    const file = path.join(__dirname, '../', v)
+    if (fs.existsSync(file)) {
+      return require(file)
+    } else {
+      return undefined
+    }
+  }
 
   /**
    * Gets a configuration property comming from os environment or the
@@ -91,6 +101,9 @@ class Config {
    * @property Server hostname
    */
   get publicUri (): string {
+    if (this.useNgrok) {
+      return this.ngrokUri
+    }
     return this.get('SERVER_PUBLIC_URI')
   }
 
@@ -98,7 +111,7 @@ class Config {
     * @property Server port
     */
   get port (): number {
-    return 4000
+    return 3000
   }
 
   /**
@@ -108,12 +121,23 @@ class Config {
     return this.get('HOST_PORT', this.fromInteger)
   }
 
-  
   /**
    * @property Reverse proxy
    */
   get reverseProxy (): boolean {
     return this.get('REVERSE_PROXY', this.fromBoolean)
+  }
+
+  /**
+   * @property Mongo connection URI
+   */
+  get mongoUri (): string {
+    return [
+      'mongodb://',
+            `${this.get('OIDC_PROVIDER_DB_USERNAME')}:${this.get('OIDC_PROVIDER_DB_PASSWORD')}@`,
+            `${this.get('OIDC_PROVIDER_DB_HOST')}:${this.get('OIDC_PROVIDER_DB_PORT')}/`,
+            `${this.get('OIDC_PROVIDER_DB_DATABASE')}?authSource=admin`
+    ].join('')
   }
 
   /**
@@ -165,6 +189,34 @@ class Config {
    */
   get whitelist (): string[] {
     return this.get<string[]>('WHITELIST', this.fromImport)
+  }
+
+  /**
+   * @property Ngrok uri
+   */
+  set ngrokUri (v: string) {
+    this._ngrokUri = v
+  }
+
+  get ngrokUri (): string {
+    if (this._ngrokUri === undefined) {
+      throw new Error('Ngrok endpoint not initialized yet')
+    }
+    return this._ngrokUri
+  }
+
+  /**
+   * @property Host
+   */
+  set host (v: string) {
+    this._host = v
+  }
+
+  get host (): string {
+    if (this._host === undefined) {
+      throw new Error('Host not initialized yet')
+    }
+    return this._host
   }
 }
 

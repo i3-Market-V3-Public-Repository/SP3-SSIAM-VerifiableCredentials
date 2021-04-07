@@ -2,15 +2,12 @@ version: '3.4'
 
 services:
   vc-service:
-    image: node:14
+    image: registry.gitlab.com/i3-market/code/wp3/t3.1-self-sovereign-identity-and-access-management/verifiable-credentials
     container_name: vc-service
-    ports:
-      - 4000:4000
-      - 127.0.0.1:9228:9228
-    working_dir: /usr/src/app
+    restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - OIDC_PROVIDER_REVERSE_PROXY=true
     volumes:
-      - "$PWD/app:/usr/src/app"
-      - "$PWD/volumes/node_modules:/usr/src/app/node_modules"
-    command: "./app/scripts/start.sh"
+      - ./volumes/misc:/app/misc
