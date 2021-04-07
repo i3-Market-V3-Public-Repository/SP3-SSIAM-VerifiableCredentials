@@ -6,8 +6,12 @@ services:
     container_name: vc-service
     restart: unless-stopped
     env_file:
-      - .env
+      - production.env
     environment:
       - OIDC_PROVIDER_REVERSE_PROXY=true
     volumes:
       - ./volumes/misc:/app/misc
+
+networks:  
+  reverse-proxy:
+    external: true
