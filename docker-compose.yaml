@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     env_file:
       - production.env
+    networks:
+      - reverse-proxy
     environment:
       - OIDC_PROVIDER_REVERSE_PROXY=true
     volumes:
