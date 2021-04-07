@@ -1,0 +1,23 @@
+version: '3.6'
+
+services:
+  vc-service-app:
+    build: 
+      context: .
+      args: 
+        USER_ID: ${USER_ID-1000}
+        GROUP_ID: ${GROUP_ID-1000}
+      dockerfile: ./Dockerfile.dev
+    image: gobberr/vc-service-dev
+    container_name: vc-service-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app
+    ports:
+      - ${HOST_BIND_IP-127.0.0.1}:$HOST_PORT:4000
+      - 127.0.0.1:9228:9228
+    command:
+      - ./scripts/start.sh
+   

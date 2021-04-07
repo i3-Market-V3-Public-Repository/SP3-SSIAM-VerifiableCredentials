@@ -1,0 +1,16 @@
+
+app/node_modules
+app/build
+
+# Ignore development configuration files
+app/misc/identity.json
+app/misc/jwks.json
+
+app/src/routes/api-spec/api.json
+
+# Environmental settings
+.env
+
+.DS_Store
+
+.vscode/

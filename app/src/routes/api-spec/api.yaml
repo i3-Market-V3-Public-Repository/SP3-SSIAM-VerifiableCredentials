@@ -1,0 +1,74 @@
+openapi: '3.0.3'
+info:
+  description: The API of the i3Market Verifying Credential service. 
+  version: 1.0.0
+  title: i3-market Verifying Credential service API
+  #contact:
+  #  name: Rupert Gobber
+  #  email: rupert.gobber@gft.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
+tags:
+  - name: DID
+    description: DID endpoint
+  - name: Credential
+    description: Credential endpoint
+
+paths:
+  /did/{callbackUrl}:    
+    get:
+      summary: Obtain the user DID
+      description: QR to scan in order to retrive the user's DID      
+      tags:
+        - DID
+      security:
+        - BasicAuth: []
+      parameters:
+        - name: callbackUrl
+          in: path
+          description: Callback url
+          required: true
+          type: string          
+      responses:
+        200:
+          description: User's did          
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "./schema/error.yaml#/Error"
+
+  /credential/{credentialType}/{did}:
+    get:
+      summary: Create a credential for DID
+      description: QR code to scan in order to add a verifiable credential       
+      tags:
+        - Credential
+      security:
+        - BasicAuth: []
+      parameters:
+        - name: credentialType
+          in: path
+          description: Credential in string format
+          required: true
+          type: string          
+        - name: did
+          in: path
+          description: DID of the user
+          required: true
+          type: string          
+
+      responses:
+        200:
+          description: QR code of the credential
+        default:
+          description: unexpected error          
+       
+    
+components:
+  securitySchemes:
+    BasicAuth:
+      $ref: "./security-schemes/basic.yaml#/basicAuth"
