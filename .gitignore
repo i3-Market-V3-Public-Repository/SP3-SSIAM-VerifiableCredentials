@@ -14,3 +14,5 @@ app/src/routes/api-spec/api.json
 .DS_Store
 
 .vscode/
+
+app/dist/
