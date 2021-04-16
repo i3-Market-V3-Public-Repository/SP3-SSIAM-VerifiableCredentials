@@ -3,6 +3,7 @@ import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
 import { WebSocketRouter } from '../../ws'
 import { EndpointLoader } from '../../endpoint'
 import InteractionController from './controller'
+import config from '../../config'
 
 function nextIfError (handler: RequestHandler): RequestHandler {
   return async (req, res, next) => {
@@ -37,13 +38,13 @@ const endpoint: EndpointLoader = async (app, wss) => {
 
 
   // Setup app routes
-  appRouter.get('/:callbackurl(*)', nextIfError(controller.authenticate)) // se non authenticato
-  appRouter.post('/callback/:uid/:callbackurl(*)', body, nextIfError(controller.authenticateCallback))
+  appRouter.get(config.getContextPath + '/:callbackurl(*)', nextIfError(controller.authenticate)) // se non authenticato
+  appRouter.post(config.getContextPath + '/callback/:uid/:callbackurl(*)', body, nextIfError(controller.authenticateCallback))
   
   // Setup ws routes
-  wsRouter.connect('/:uid(.*)/socket', controller.socketConnect)
-  wsRouter.message('/:uid(.*)/socket', controller.socketMessage)
-  wsRouter.close('/:uid(.*)/socket', controller.socketClose)
+  wsRouter.connect(config.getContextPath + '/:uid(.*)/socket', controller.socketConnect)
+  wsRouter.message(config.getContextPath + '/:uid(.*)/socket', controller.socketMessage)
+  wsRouter.close(config.getContextPath + '/:uid(.*)/socket', controller.socketClose)
   
   // Handle errors
   // appRouter.use(controller.onError)

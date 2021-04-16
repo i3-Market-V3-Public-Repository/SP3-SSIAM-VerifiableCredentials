@@ -71,13 +71,14 @@ export default class InteractionController {
 
     //TODO: inizializzare la socket 
     const uid = '123uidtest'
+    const context_path = config.getContextPath;
 
-    const callbackUrl = `https://${req.get('host')}/did/callback/${uid}/${req.params.callbackurl}`
+    const callbackUrl = `https://${req.get('host')}${context_path}/did/callback/${uid}/${req.params.callbackurl}`
     const reqToken = await this.credentials.createDisclosureRequest({
       notifications: true,
       callbackUrl        
     })
-    logger.debug(reqToken) //TODO:
+    logger.debug(reqToken) 
     //logger.debug(reqToken)
     const query = message.messageToURI(reqToken)
     const uri = message.paramsToQueryString(query, { callback_type: 'post' })

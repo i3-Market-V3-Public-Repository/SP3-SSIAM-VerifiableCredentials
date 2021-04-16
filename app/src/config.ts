@@ -111,7 +111,7 @@ class Config {
     * @property Server port
     */
   get port (): number {
-    return 3000
+    return 4000
   }
 
   /**
@@ -126,6 +126,13 @@ class Config {
    */
   get reverseProxy (): boolean {
     return this.get('REVERSE_PROXY', this.fromBoolean)
+  }
+
+  /**
+   * @property Context path
+   */
+   get getContextPath (): string {
+    return this.get('CONTEXT_PATH')
   }
 
   /**
