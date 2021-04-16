@@ -81,9 +81,9 @@ export async function main (): Promise<void> {
   }
 
   // Add endpoints
-  addEndpoint(app, wss, '/api-spec', await apiSpecEndpoint(app, wss))
-  addEndpoint(app, wss, '/credential', await credentialEndpoint(app, wss))
-  addEndpoint(app, wss, '/did', await didEndpoint(app, wss))
+  addEndpoint(app, wss, '/vc/api-spec', await apiSpecEndpoint(app, wss))
+  addEndpoint(app, wss, '/vc/credential', await credentialEndpoint(app, wss))
+  addEndpoint(app, wss, '/vc/did', await didEndpoint(app, wss))
 
 
   // Add static files (css and js)
@@ -97,7 +97,7 @@ export async function main (): Promise<void> {
 
   // Log connection information
   logger.info(`Application is listening on port ${config.port}`)  
-  logger.info(`OpenAPI browsable spec at ${publicUri}api-spec/ui`)
+  logger.info(`OpenAPI browsable spec at ${publicUri}/vc/api-spec/ui`)
 }
 
 export function onError (reason?: Error): void {

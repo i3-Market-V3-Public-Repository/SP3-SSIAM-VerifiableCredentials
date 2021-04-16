@@ -3,7 +3,6 @@ import { RequestHandler, Router as AppRouter } from 'express'
 import { WebSocketRouter } from '../../ws'
 import { EndpointLoader } from '../../endpoint'
 import InteractionController from './controller'
-import config from '../../config'
 
 function nextIfError (handler: RequestHandler): RequestHandler {
   return async (req, res, next) => {
@@ -25,7 +24,6 @@ const endpoint: EndpointLoader = async (app, wss) => {
   // Wait controller initialization
   await controller.initialize()
 
-
   // Handle view
   appRouter.use((req, res, next) => {
     const orig = res.render
@@ -41,14 +39,15 @@ const endpoint: EndpointLoader = async (app, wss) => {
     }
     next()
   })
+  
 
   // Setup app routes
-  appRouter.get(config.getContextPath + '/:credentialType/:did', setNoCache, nextIfError(controller.addCredentialByDid)) // se authenticato
+  appRouter.get('/:credentialType/:did', setNoCache, nextIfError(controller.addCredentialByDid)) // se authenticato
   
   // Setup ws routes
-  wsRouter.connect(config.getContextPath + '/did/:uid/socket', controller.socketConnect)
-  wsRouter.message(config.getContextPath + '/did/:uid/socket', controller.socketMessage)
-  wsRouter.close(config.getContextPath + '/did/:uid/socket', controller.socketClose)
+  wsRouter.connect('/did/:uid/socket', controller.socketConnect)
+  wsRouter.message('/did/:uid/socket', controller.socketMessage)
+  wsRouter.close('/did/:uid/socket', controller.socketClose)
   
   //appRouter.post('/credential/revoke', setNoCache, body, nextIfError(controller.revokeCredentialByJWT))
   //appRouter.get('/credential/verify/:claim', setNoCache, nextIfError(controller.verifyCredentialByClaim))
