@@ -160,7 +160,8 @@ export default class InteractionController {
     console.log('addCredentialByAuthentication. CredentialType: ' + credentialType);
 
     console.log('addCredentialByAuthentication');      
-    const callbackUrl = `https://${req.get('host')}/did/callback/${credentialType}` 
+    const context_path = config.getContextPath;
+    const callbackUrl = `https://${req.get('host')}${context_path}/did/callback/${credentialType}` 
     console.log(callbackUrl)
     const reqToken = await this.credentials.createDisclosureRequest({
       // TODO: claims Requirements for claims requested from a user. See Claims Specs and Verified Claims

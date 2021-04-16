@@ -1,7 +1,7 @@
 import * as path from 'path'
 import express from 'express'
 import * as http from 'http'
-
+import { URL } from 'url'
 
 import config from './config'
 import logger, { loggerMiddleware } from './logger'
@@ -97,7 +97,7 @@ export async function main (): Promise<void> {
 
   // Log connection information
   logger.info(`Application is listening on port ${config.port}`)  
-  logger.info(`OpenAPI browsable spec at ${publicUri}/api-spec/ui`)
+  logger.info(`OpenAPI browsable spec at ${publicUri}api-spec/ui`)
 }
 
 export function onError (reason?: Error): void {
