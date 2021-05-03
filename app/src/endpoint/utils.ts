@@ -16,6 +16,10 @@ export function addEndpoint (
     app.use(path, endpoint.appRouter)
   }
 
+  if (endpoint.basicRouter) {
+    app.use(path, endpoint.basicRouter)
+  }
+
   if (endpoint.wsRouter) {
     wss.use(path, endpoint.wsRouter)
   }

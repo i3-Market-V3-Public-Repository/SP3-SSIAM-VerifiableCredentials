@@ -188,14 +188,14 @@ export default class InteractionController {
 
   /**   
    * POST /credential/revoke - nel body il JWT
-   * 
-   * TODO: la revoke ha il JWT come input nel body ? Chi chiama la revoke ? Oidc è issuer e anche holder ? 
-        
+   *   
+  */      
   revokeCredentialByJWT: RequestHandler = async (req, res, next) => {
 
     console.log('req.body')
     console.log(req.body)
-
+    return(req.body)
+/*
     const identity = await config.identityPromise;    
     const privateKey = '0x' + identity.privateKey // '0x<Issuer Private Key>'
     const ethSigner = (rawTx: any, cb: any) => cb(null, sign(rawTx, privateKey))
@@ -207,8 +207,8 @@ export default class InteractionController {
     const revoker = new EthrCredentialRevoker({ infuraProjectId: 'https://rinkeby.infura.io/ethr-did' }) //TODO: metto il mio progetto
     const txHash = await revoker.revoke(credential, ethSigner)
     console.log('txHash')
-    console.log(txHash)
-  }*/   
+    console.log(txHash)*/   
+  }
 
   /**
    * GET /credential/verify/{claim}
@@ -220,9 +220,10 @@ export default class InteractionController {
    *    - https://github.com/decentralized-identity/did-jwt prima questo
    *    - https://github.com/uport-project/credential-status poi questo
    *    - poi aggiungere controllo se è stata revocata usando https://github.com/uport-project/credential-status
-   
-  verifyCredentialByClaim: RequestHandler = async (req, res, next) => {
-
+  */
+  verifyCredentialByJWT: RequestHandler = async (req, res, next) => {
+    return(req.body)
+    /*
     console.log('claim to verify: ' + req.params.claim)    
 
     const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' } // FIXME:    
@@ -244,33 +245,8 @@ export default class InteractionController {
       const uri = message.paramsToQueryString(message.messageToURI(requestToken), {callback_type: 'post'})
       const qr =  transports.ui.getImageDataURI(uri)
       console.log(qr)
-    })
-  }*/
+    })*/
+  }
 
-  /**
-   * GET /credential/verify/callback
-   
-  verifyCredentialCallback: RequestHandler = async (req, res, next) => {
-
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' } // FIXME:
-    
-    const identity = await config.identityPromise
-    console.log('identity: ' + JSON.stringify(identity))    
-    const credentials = new Credentials({      
-      did: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //did in input
-      //did: req.params.did, //did in input
-      signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'), //FIXME: qui che chiave ci va ? 
-      resolver: new Resolver(getResolver(providerConfig))
-    })
-    
-    const jwt = req.body.access_token
-    console.log(jwt)
-    console.log(didJWT.decodeJWT(jwt))
-
-    credentials.authenticateDisclosureResponse(jwt).then(creds => {
-      //validate specific data per use case
-      console.log(creds)      
-    }).catch( err => { console.log('oops') })
-  }*/
 
 }
