@@ -14,7 +14,7 @@ tags:
     description: Credential endpoint
 
 paths:
-  /vc/did/{callbackUrl}:    
+  /did/{callbackUrl}:    
     get:
       summary: Obtain the user DID
       description: QR to scan in order to retrive the user's DID      
@@ -38,32 +38,79 @@ paths:
               schema:
                 $ref: "./schema/error.yaml#/Error"
 
-  /vc/credential/{credentialType}/{did}:
-    get:
+  /credential/issue/{did}:
+    post:
       summary: Create a credential for DID
       description: QR code to scan in order to add a verifiable credential       
       tags:
         - Credential
       security:
         - BasicAuth: []
-      parameters:
-        - name: credentialType
-          in: path
-          description: Credential in string format
-          required: true
-          type: string          
+      parameters:               
         - name: did
           in: path
           description: DID of the user
           required: true
-          type: string          
-
+          type: string  
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credential:
+                  type: string              
       responses:
         200:
           description: QR code of the credential
         default:
           description: unexpected error          
-       
+    
+  /credential/revoke:
+    post:
+      summary: Revoke a credential by JWT 
+      tags:
+        - Credential 
+      security:
+        - BasicAuth: []    
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credential:
+                  type: string        
+      responses:
+        200:
+          description: Revoke operation status
+        default:
+          description: unexpected error   
+
+  /credential/verify:
+    post:
+      summary: Verify a credential by JWT 
+      tags:
+        - Credential 
+      security:
+        - BasicAuth: []    
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                credential:
+                  type: string        
+      responses:
+        200:
+          description: Verify operation status
+        default:
+          description: unexpected error   
+
 components:
   securitySchemes:
     BasicAuth:

@@ -5,6 +5,7 @@ import WebSocketServer, { WebSocketRouter } from '../ws'
 
 export interface Endpoint {
   appRouter?: ExpressRouter
+  basicRouter?: ExpressRouter
   wsRouter?: WebSocketRouter
 }
 
