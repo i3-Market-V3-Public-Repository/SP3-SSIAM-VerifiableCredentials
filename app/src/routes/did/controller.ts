@@ -12,8 +12,6 @@ import WebSocketServer from '../../ws'
 const transports = require('uport-transports').transport
 const message = require('uport-transports').message.util
 
-
-
 //import { EthrCredentialRevoker } from 'ethr-status-registry'
 //import { sign } from 'ethjs-signer'
 //const didJWT = require('did-jwt')

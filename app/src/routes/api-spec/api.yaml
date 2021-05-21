@@ -2,7 +2,7 @@ openapi: '3.0.3'
 info:
   description: The API of the i3Market Verifying Credential service. 
   version: 1.0.0
-  title: i3-market Verifying Credential service API  
+  title: i3-market Verifiable Credential service API  
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
@@ -31,6 +31,24 @@ paths:
       responses:
         200:
           description: User's did          
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "./schema/error.yaml#/Error"
+
+  /credential:    
+    get:
+      summary: Get the credential list
+      description: Get the credential list
+      tags:
+        - Credential
+      security:
+        - BasicAuth: []            
+      responses:
+        200:
+          description: Credential list
         default:
           description: unexpected error
           content:
@@ -81,7 +99,7 @@ paths:
             schema:
               type: object
               properties:
-                credential:
+                credentialJwt:
                   type: string        
       responses:
         200:
@@ -103,8 +121,8 @@ paths:
             schema:
               type: object
               properties:
-                credential:
-                  type: string        
+                credentialJwt:
+                  type: string                    
       responses:
         200:
           description: Verify operation status
