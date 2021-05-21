@@ -45,7 +45,8 @@ const endpoint: EndpointLoader = async (app, wss) => {
   
 
   // Setup app routes
-  appRouter.post('/issue/:did', setNoCache, body, nextIfError(controller.addCredentialByDid)) // se authenticato
+  appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
+  appRouter.post('/issue/:did', setNoCache, body, nextIfError(controller.addCredentialByDid)) 
   basicRouter.post('/revoke', setNoCache, body, nextIfError(controller.revokeCredentialByJWT))
   basicRouter.post('/verify', setNoCache, body, nextIfError(controller.verifyCredentialByJWT))
 

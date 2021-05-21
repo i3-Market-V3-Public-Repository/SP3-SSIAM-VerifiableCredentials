@@ -12,9 +12,9 @@ import WebSocketServer from '../../ws'
 const transports = require('uport-transports').transport
 const message = require('uport-transports').message.util
 
-//import { EthrCredentialRevoker } from 'ethr-status-registry'
-//import { sign } from 'ethjs-signer'
-//const didJWT = require('did-jwt')
+// import { EthrCredentialRevoker } from 'ethr-status-registry'
+// import { sign } from 'ethjs-signer'
+// const didJWT = require('did-jwt')
 
 interface SocketParams {
   uid: string
@@ -60,9 +60,7 @@ export default class InteractionController {
 
 
   /**
-   * GET /credential/{credentialType}/{did} - create a new credential
-   * 
-   * TODO: cloud wallet integration
+   * POST /credential/issue/{did} - create a new credential  
    */
   addCredentialByDid: RequestHandler = async (req, res, next) => {
 
@@ -77,33 +75,109 @@ export default class InteractionController {
     credentials.createVerification({
       sub: req.params.did,
       exp: Math.floor(new Date().getTime() / 1000) + 30 * 24 * 60 * 60,
-      claim: {
-        [req.params.credentialType] : true
-      },
+      //TODO: discutere differenza tra exp del token e della credenziale
+      // il token dovrebbe essere accettato in 5 minuti ad esempio , la credenziale ha durata diversa dal token
       
+      claim: req.body // prima era così: { [req.params.credentialType] : true },
             
     }).then(attestation => {
       
       logger.debug(`\nEncoded JWT sent to user: ${attestation}\n`)
       const uri = message.paramsToQueryString(message.messageToURI(attestation), {callback_type: 'post'})
-      logger.debug(`\Uri: ${uri}\n`)
+      logger.debug(`\nUri: ${uri}\n`)
       const qr =  transports.ui.getImageDataURI(uri)
       logger.debug(qr)
-      const title = 'Scan to add the ' + req.params.credentialType + ' credential';
-      return res.render('create_credential', { qr, title })
+      //const title = 'Scan to add the ' + 'req.params.credentialType' + ' credential';
+      //return res.render('create_credential', { qr, title })
+      res.send(qr)
 
     }).catch(e => { console.log(e) })
+    
+  }
+
+  /**   
+   * POST /credential/revoke - nel body il JWT
+   *   
+   */      
+  revokeCredentialByJWT: RequestHandler = async (req, res, next) => {
+
+    console.log('req.body')
+    console.log(req.body)
+    res.send(req.body)
+/*
+    const identity = await config.identityPromise;    
+    const privateKey = '0x' + identity.privateKey // '0x<Issuer Private Key>'
+    const ethSigner = (rawTx: any, cb: any) => cb(null, sign(rawTx, privateKey))
+
+    // const credential = '<JWT token with credentialStatus>' //TODO: prenderlo dal body    
+    // FIXME: su questo manca il credential status
+    const credential = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJpYXQiOjE1ODg5MjIyMDEsImNyZWRlbnRpYWxTdGF0dXMiOnsidHlwZSI6IkV0aHJTdGF0dXNSZWdpc3RyeTIwMTkiLCJpZCI6InJpbmtlYnk6MHg5N2ZkMjc4OTJjZGNEMDM1ZEFlMWZlNzEyMzVjNjM2MDQ0QjU5MzQ4In0sImlzcyI6ImRpZDpldGhyOjB4NTRkNTllM2ZmZDc2OTE3ZjYyZGI3MDJhYzM1NGIxN2YzODQyOTU1ZSJ9.0sLZupOnyrdZPQAhtfa2eP_2HN_FELJu_clbXBrk9SgaU_ZO0izjDLTnNkip9RVM6ED0nLznfT35XHk6_C9S_Q' 
+
+    const revoker = new EthrCredentialRevoker({ infuraProjectId: 'https://rinkeby.infura.io/ethr-did' }) //TODO: metto il mio progetto
+    const txHash = await revoker.revoke(credential, ethSigner)
+    console.log('txHash')
+    console.log(txHash)*/   
   }
 
   /**
-   * GET /credential/{did} - nel body i dati della credential (da capire come fare) 
-   * 
-   * TODO:  usare did-jtw anziche createVerification, metterci dentro il credentialStatus
-   * gestire creazione qr oppure invio del jwt ad url (passato in input)
-   * integrare wallet 
+   * POST /credential/verify - nel body il JWT
    */
+  verifyCredentialByJWT: RequestHandler = async (req, res, next) => {
+
+    console.log('req.body')
+    console.log(req.body)
+    res.send(req.body)
+
+    // TODO:
+    // - https://developer.uport.me/credentials/requestverification#request-verifications questo è per i ruoli nel login
+    // - https://github.com/decentralized-identity/did-jwt prima questo
+    // - https://github.com/uport-project/credential-status poi questo
+    // - poi aggiungere controllo se è stata revocata usando https://github.com/uport-project/credential-status
+
+    /*
+    console.log('claim to verify: ' + req.params.claim)    
+
+    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' } // FIXME:    
+    const identity = await config.identityPromise
+    console.log('identity: ' + JSON.stringify(identity))
+    const credentials = new Credentials({      
+      did: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //did in input
+      //did: req.params.did, //did in input
+      signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'), //FIXME: qui che chiave ci va ? 
+      resolver: new Resolver(getResolver(providerConfig))
+    })
+
+    credentials.createDisclosureRequest({
+      verified: [req.params.claim],
+      callbackUrl: '/credential/verify/callback'
+    }).then(requestToken => {
+
+      console.log(didJWT.decodeJWT(requestToken))  //log request token to console
+      const uri = message.paramsToQueryString(message.messageToURI(requestToken), {callback_type: 'post'})
+      const qr =  transports.ui.getImageDataURI(uri)
+      console.log(qr)
+    })*/
+  }
+
+  /**
+   * Get the list of the credential
+   */
+  getCredentialList: RequestHandler = async (req, res, next) => {
+    res.send(['to be implemented :)'])
+  }
+
+  //FIXME: deprecated flows below !!!
+
+
+  /**
+   * GET /credential/{did} - nel body i dati della credential (da capire come fare)   
+   */
+  /*
   addCredentialCallback: RequestHandler = async (req, res, next) => {
 
+    // TODO:  usare did-jtw anziche createVerification, metterci dentro il credentialStatus
+    // gestire creazione qr oppure invio del jwt ad url (passato in input)
+    // integrare wallet 
     const jwt = req.body.access_token
 
 
@@ -149,11 +223,13 @@ export default class InteractionController {
       
       }).catch(e => { console.log(e) })
     })
-  }
+  }*/
 
   /**
    * GET /credential - nel body i dati della credential (da capire come fare)   
    */
+  /*
+
   addCredentialByAuthentication: RequestHandler = async (req, res, next) => {
 
     const credentialType = req.params.credentialType;
@@ -184,69 +260,6 @@ export default class InteractionController {
     return res.render('login', {
       ...options, qr
     })
-  }
-
-  /**   
-   * POST /credential/revoke - nel body il JWT
-   *   
-  */      
-  revokeCredentialByJWT: RequestHandler = async (req, res, next) => {
-
-    console.log('req.body')
-    console.log(req.body)
-    return(req.body)
-/*
-    const identity = await config.identityPromise;    
-    const privateKey = '0x' + identity.privateKey // '0x<Issuer Private Key>'
-    const ethSigner = (rawTx: any, cb: any) => cb(null, sign(rawTx, privateKey))
-
-    // const credential = '<JWT token with credentialStatus>' //TODO: prenderlo dal body    
-    // FIXME: su questo manca il credential status
-    const credential = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJpYXQiOjE1ODg5MjIyMDEsImNyZWRlbnRpYWxTdGF0dXMiOnsidHlwZSI6IkV0aHJTdGF0dXNSZWdpc3RyeTIwMTkiLCJpZCI6InJpbmtlYnk6MHg5N2ZkMjc4OTJjZGNEMDM1ZEFlMWZlNzEyMzVjNjM2MDQ0QjU5MzQ4In0sImlzcyI6ImRpZDpldGhyOjB4NTRkNTllM2ZmZDc2OTE3ZjYyZGI3MDJhYzM1NGIxN2YzODQyOTU1ZSJ9.0sLZupOnyrdZPQAhtfa2eP_2HN_FELJu_clbXBrk9SgaU_ZO0izjDLTnNkip9RVM6ED0nLznfT35XHk6_C9S_Q' 
-
-    const revoker = new EthrCredentialRevoker({ infuraProjectId: 'https://rinkeby.infura.io/ethr-did' }) //TODO: metto il mio progetto
-    const txHash = await revoker.revoke(credential, ethSigner)
-    console.log('txHash')
-    console.log(txHash)*/   
-  }
-
-  /**
-   * GET /credential/verify/{claim}
-   * 
-   * TODO:
-   *    - https://developer.uport.me/credentials/requestverification#request-verifications questo è per i ruoli nel login
-   *    
-   *  
-   *    - https://github.com/decentralized-identity/did-jwt prima questo
-   *    - https://github.com/uport-project/credential-status poi questo
-   *    - poi aggiungere controllo se è stata revocata usando https://github.com/uport-project/credential-status
-  */
-  verifyCredentialByJWT: RequestHandler = async (req, res, next) => {
-    return(req.body)
-    /*
-    console.log('claim to verify: ' + req.params.claim)    
-
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' } // FIXME:    
-    const identity = await config.identityPromise
-    console.log('identity: ' + JSON.stringify(identity))
-    const credentials = new Credentials({      
-      did: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //did in input
-      //did: req.params.did, //did in input
-      signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'), //FIXME: qui che chiave ci va ? 
-      resolver: new Resolver(getResolver(providerConfig))
-    })
-
-    credentials.createDisclosureRequest({
-      verified: [req.params.claim],
-      callbackUrl: '/credential/verify/callback'
-    }).then(requestToken => {
-
-      console.log(didJWT.decodeJWT(requestToken))  //log request token to console
-      const uri = message.paramsToQueryString(message.messageToURI(requestToken), {callback_type: 'post'})
-      const qr =  transports.ui.getImageDataURI(uri)
-      console.log(qr)
-    })*/
-  }
-
+  }*/
 
 }
