@@ -24,12 +24,12 @@ class Config {
   protected _host?: string
 
   constructor () {
-    const defaultPort = '3000'
+    const defaultPort = '4000'
 
     this.defaults = {
       NODE_ENV: 'development',
 
-      SERVER_PUBLIC_URI: 'http://localhost:3000',
+      SERVER_PUBLIC_URI: 'http://localhost:4000',
       HOST_PORT: defaultPort,
 
       REVER_PROXY: '0',
@@ -111,7 +111,7 @@ class Config {
     * @property Server port
     */
   get port (): number {
-    return 4000
+    return this.get('SERVER_PORT', this.fromInteger)
   }
 
   /**

@@ -12,11 +12,15 @@ tags:
     description: DID endpoint
   - name: Credential
     description: Credential endpoint
+  - name: Presentation
+    description: Presentation endpoint
+  
+  
 
 paths:
   /did/{callbackUrl}:    
     get:
-      summary: Obtain the user DID
+      summary: Obtain the user DID - uPort flow
       description: QR to scan in order to retrive the user's DID      
       tags:
         - DID
@@ -27,7 +31,8 @@ paths:
           in: path
           description: Callback url
           required: true
-          type: string          
+          type: string     
+      deprecated: true	     
       responses:
         200:
           description: User's did          
@@ -56,9 +61,33 @@ paths:
               schema:
                 $ref: "./schema/error.yaml#/Error"
 
+  /credential/issue/{credential}:    
+    get:
+      summary: Create a new credential with Veramo framework
+      description: Create a new credential with Veramo framework
+      tags:
+        - Credential
+      security:
+        - BasicAuth: []  
+      parameters:           
+        - name: credential
+          in: path
+          description: the credential JSON in encoded way
+          required: true
+          type: string             
+      responses:
+        200:
+          description: Credential list
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "./schema/error.yaml#/Error"
+
   /credential/issue/{did}:
     post:
-      summary: Create a credential for DID
+      summary: Create a credential for DID - uPort flow
       description: QR code to scan in order to add a verifiable credential       
       tags:
         - Credential
@@ -70,6 +99,7 @@ paths:
           description: DID of the user
           required: true
           type: string  
+      deprecated: true
       requestBody:
         required: true
         content:
@@ -127,7 +157,58 @@ paths:
         200:
           description: Verify operation status
         default:
-          description: unexpected error   
+          description: unexpected error 
+
+  /presentation/issue/{did}:
+    post:
+      summary: Create a verifiable presentation for DID
+      description: QR code to scan in order to add a verifiable presentation       
+      tags:
+        - Presentation
+      security:
+        - BasicAuth: []
+      parameters:               
+        - name: did
+          in: path
+          description: DID of the user
+          required: true
+          type: string  
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                presentation:
+                  type: string              
+      responses:
+        200:
+          description: QR code of the credential
+        default:
+          description: unexpected error     
+      
+  /presentation/verify:
+    post:
+      summary: Verify a verifiable presentation by JWT 
+      tags:
+        - Presentation 
+      security:
+        - BasicAuth: []    
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                presentationJwt:
+                  type: string                    
+      responses:
+        200:
+          description: Verify operation status
+        default:
+          description: unexpected error 
 
 components:
   securitySchemes:

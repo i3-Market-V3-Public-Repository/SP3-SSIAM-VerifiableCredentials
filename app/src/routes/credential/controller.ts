@@ -9,8 +9,13 @@ import config from '../../config'
 import { SocketHandler } from '../../ws/utils'
 import WebSocketServer from '../../ws'
 
-const transports = require('uport-transports').transport
-const message = require('uport-transports').message.util
+import { agent } from './agent'
+// const transports = require('uport-transports').transport
+// const message = require('uport-transports').message.util
+
+import { EthrDID } from 'ethr-did'
+import { Issuer } from 'did-jwt-vc'
+import { JwtCredentialPayload, createVerifiableCredentialJwt } from 'did-jwt-vc'
 
 // import { EthrCredentialRevoker } from 'ethr-status-registry'
 // import { sign } from 'ethjs-signer'
@@ -39,7 +44,6 @@ export default class InteractionController {
       resolver: new Resolver(getResolver(providerConfig))
     })
   }
-  
 
   // WebSocket Methods
   socketConnect: SocketHandler<SocketParams> = async (socket, req) => {  
@@ -58,41 +62,66 @@ export default class InteractionController {
     logger.debug('Close socket')
   }
 
+  /**
+   * GET /credential/{did}/{credential} - callback to create credential using Veramo framework
+   */
+  addCredentialByDidAndCredentialString: RequestHandler = async (req, res, next) => {
+    
+    let credentialPayload = JSON.parse(req.params.credential)
+    credentialPayload.id = req.params.did
+
+    /* Create an identifier and optionally link to an existing user */
+    const user = await agent.didManagerGetOrCreate({
+      alias: 'VCservice'
+    })
+
+    const credential = await agent.createVerifiableCredential({
+      credential: {
+        issuer: { id: user.did },
+        credentialSubject: credentialPayload
+      },
+      proofFormat: 'jwt',
+      save: false
+    })
+
+    console.log(credential)
+    res.send(credential)
+  
+  }
+
+  /**
+   * GET /credential/issue/{credential} - create a new credential 
+   */
+  addVeramoCredential: RequestHandler = async (req, res, next) => {    
+    return res.render('create_veramo_credential', {title: '', credential: req.params.credential});
+  }
 
   /**
    * POST /credential/issue/{did} - create a new credential  
    */
   addCredentialByDid: RequestHandler = async (req, res, next) => {
 
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }   
-    const identity = await config.identityPromise        
-    const credentials = new Credentials({      
-      did: identity.did, 
-      signer: SimpleSigner(identity.privateKey), 
-      resolver: new Resolver(getResolver(providerConfig))
-    })
+    const identity = await config.identityPromise;
     
-    credentials.createVerification({
-      sub: req.params.did,
-      exp: Math.floor(new Date().getTime() / 1000) + 30 * 24 * 60 * 60,
-      //TODO: discutere differenza tra exp del token e della credenziale
-      // il token dovrebbe essere accettato in 5 minuti ad esempio , la credenziale ha durata diversa dal token
-      
-      claim: req.body // prima era così: { [req.params.credentialType] : true },
-            
-    }).then(attestation => {
-      
-      logger.debug(`\nEncoded JWT sent to user: ${attestation}\n`)
-      const uri = message.paramsToQueryString(message.messageToURI(attestation), {callback_type: 'post'})
-      logger.debug(`\nUri: ${uri}\n`)
-      const qr =  transports.ui.getImageDataURI(uri)
-      logger.debug(qr)
-      //const title = 'Scan to add the ' + 'req.params.credentialType' + ' credential';
-      //return res.render('create_credential', { qr, title })
-      res.send(qr)
+    const issuer: Issuer = new EthrDID({
+      identifier: identity.did,    
+      privateKey: identity.privateKey,
+      rpcUrl: 'https://rinkeby.infura.io/v3/8a581af7416b4e7681d1f871b6945281',
+      chainNameOrId: 'rinkeby'      
+    }) as Issuer;
 
-    }).catch(e => { console.log(e) })
+    const vcPayload: JwtCredentialPayload = {
+      sub: req.params.did,
+      nbf: Math.floor(new Date().getTime() / 1000),
+      vc: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential'],
+        credentialSubject: req.body
+      }
+    }
     
+    const vcJwt = await createVerifiableCredentialJwt(vcPayload, issuer)    
+    res.send(vcJwt)
   }
 
   /**   
@@ -103,8 +132,8 @@ export default class InteractionController {
 
     console.log('req.body')
     console.log(req.body)
-    res.send(req.body)
-/*
+    res.send("missing integration with the smart contract in which to mark the credential as revoked")
+    /*
     const identity = await config.identityPromise;    
     const privateKey = '0x' + identity.privateKey // '0x<Issuer Private Key>'
     const ethSigner = (rawTx: any, cb: any) => cb(null, sign(rawTx, privateKey))
@@ -126,7 +155,7 @@ export default class InteractionController {
 
     console.log('req.body')
     console.log(req.body)
-    res.send(req.body)
+    res.send("missing integration with the smart contract in which to verify the credential status")
 
     // TODO:
     // - https://developer.uport.me/credentials/requestverification#request-verifications questo è per i ruoli nel login
@@ -137,13 +166,13 @@ export default class InteractionController {
     /*
     console.log('claim to verify: ' + req.params.claim)    
 
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' } // FIXME:    
+    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }   
     const identity = await config.identityPromise
     console.log('identity: ' + JSON.stringify(identity))
     const credentials = new Credentials({      
       did: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //did in input
       //did: req.params.did, //did in input
-      signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'), //FIXME: qui che chiave ci va ? 
+      signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'), 
       resolver: new Resolver(getResolver(providerConfig))
     })
 
@@ -163,103 +192,7 @@ export default class InteractionController {
    * Get the list of the credential
    */
   getCredentialList: RequestHandler = async (req, res, next) => {
-    res.send(['to be implemented :)'])
+    res.send(['to be implemented asap'])
   }
-
-  //FIXME: deprecated flows below !!!
-
-
-  /**
-   * GET /credential/{did} - nel body i dati della credential (da capire come fare)   
-   */
-  /*
-  addCredentialCallback: RequestHandler = async (req, res, next) => {
-
-    // TODO:  usare did-jtw anziche createVerification, metterci dentro il credentialStatus
-    // gestire creazione qr oppure invio del jwt ad url (passato in input)
-    // integrare wallet 
-    const jwt = req.body.access_token
-
-
-    if(!req.params.did) {
-      //TODO: se è null me lo estraggo dal jwt
-      console.log('req addCredentialByDid')
-      //console.log(req)
-    }
-
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }   
-    const identity = await config.identityPromise        
-    const credentials = new Credentials({      
-      //did: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //questo va, ma ci deve andare l'application did 
-      did: identity.did, //application did
-      //signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'),
-      signer: SimpleSigner(identity.privateKey), 
-      resolver: new Resolver(getResolver(providerConfig))
-    })
-
-    
-    credentials.authenticateDisclosureResponse(jwt).then(creds => {
-
-      const push = transports.push.send(creds.pushToken, creds.boxPub)
-
-      // quando creiamo una credentials dobbiamo avere embed il credentialStatus (vedi ethr-registry-status) dentro il payload usando did-jwt ? 
-      credentials.createVerification({
-        //sub: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //application did 
-        sub: req.params.did, //TODO: se non c'è nei param lo prendo dal jwt 
-        exp: Math.floor(new Date().getTime() / 1000) + 30 * 24 * 60 * 60,
-        claim: {
-          'Identity' : {'Last Seen' : `${new Date()}`}, 
-          'Role': { 'User Role': req.params.credentialType } 
-        }      
-      }).then(attestation => {
-        
-        console.log(`\nEncoded JWT sent to user: ${attestation}\n`)
-        return push(attestation)  // *push* the notification to the user's uPort mobile app.
-
-      }).then(res => {
-        
-        console.log('Push notification sent and should be recieved any moment...')
-        console.log('Accept the push notification in the uPort mobile application')
-      
-      }).catch(e => { console.log(e) })
-    })
-  }*/
-
-  /**
-   * GET /credential - nel body i dati della credential (da capire come fare)   
-   */
-  /*
-
-  addCredentialByAuthentication: RequestHandler = async (req, res, next) => {
-
-    const credentialType = req.params.credentialType;
-    console.log('addCredentialByAuthentication. CredentialType: ' + credentialType);
-
-    console.log('addCredentialByAuthentication');      
-    const context_path = config.getContextPath;
-    const callbackUrl = `https://${req.get('host')}${context_path}/did/callback/${credentialType}` 
-    console.log(callbackUrl)
-    const reqToken = await this.credentials.createDisclosureRequest({
-      // TODO: claims Requirements for claims requested from a user. See Claims Specs and Verified Claims
-      notifications: true,
-      callbackUrl,
-      //verified: ['role']
-    })
-    logger.debug('reqToken: ' + reqToken)
-
-    const query = message.messageToURI(reqToken)
-    const uri = message.paramsToQueryString(query, { callback_type: 'post' })
-    const qr = transports.ui.getImageDataURI(uri)
-
-    logger.debug('Login interaction received')
-    
-    const options = {
-
-    }
-
-    return res.render('login', {
-      ...options, qr
-    })
-  }*/
 
 }

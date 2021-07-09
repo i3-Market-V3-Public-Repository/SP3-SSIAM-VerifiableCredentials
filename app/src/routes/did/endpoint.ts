@@ -26,7 +26,7 @@ const endpoint: EndpointLoader = async (app, wss) => {
     res.render = (view, locals) => {
       app.render(view, locals, (err, html) => {
         if (err) throw err
-        orig.call(res, '_layout_authenticate', {
+        orig.call(res, '_layout', {
           ...locals,
           body: html
         })
@@ -34,6 +34,7 @@ const endpoint: EndpointLoader = async (app, wss) => {
     }
     next()
   })
+  
 
 
   // Setup app routes

@@ -6,7 +6,7 @@ Run the following command in the project root. The first time it will take a whi
 ./docker-dev-start
 ```
 
-The OAS documentation can be accessed on [http://localhost:3000/oidc/api-spec/ui](http://localhost:3000/oidc/api-spec/ui).
+The OAS documentation can be accessed on [http://localhost:4000/api-spec/ui](http://localhost:4000/api-spec/ui).
 
 You can stop the container at any time with `Ctrl-C`.
 
@@ -15,3 +15,9 @@ If you want to delete and prune all the created images, containers, networks, vo
 ```console
 ./docker-dev-prune
 ```
+
+### TODO
+
+1.  API authentication
+2.  Verify and revoke verifiable credential
+3.  Verifiable presentation management
