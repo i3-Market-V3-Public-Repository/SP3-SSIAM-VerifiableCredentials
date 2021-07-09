@@ -34,7 +34,7 @@ const endpoint: EndpointLoader = async (app, wss) => {
     res.render = (view, locals) => {
       app.render(view, locals, (err, html) => {
         if (err) throw err
-        orig.call(res, '_layout_authenticate', {
+        orig.call(res, '_layout', {
           ...locals,
           body: html
         })
@@ -44,9 +44,15 @@ const endpoint: EndpointLoader = async (app, wss) => {
   })
   
 
-  // Setup app routes
+  // uPort routes
   appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
   appRouter.post('/issue/:did', setNoCache, body, nextIfError(controller.addCredentialByDid)) 
+
+  // Veramo routes
+  appRouter.get('/issue/:credential', setNoCache, nextIfError(controller.addVeramoCredential)) 
+  appRouter.get('/issue/:did/:credential', setNoCache, nextIfError(controller.addCredentialByDidAndCredentialString)) 
+
+  // To be implemented
   basicRouter.post('/revoke', setNoCache, body, nextIfError(controller.revokeCredentialByJWT))
   basicRouter.post('/verify', setNoCache, body, nextIfError(controller.verifyCredentialByJWT))
 
@@ -55,13 +61,6 @@ const endpoint: EndpointLoader = async (app, wss) => {
   wsRouter.message('/did/:uid/socket', controller.socketMessage)
   wsRouter.close('/did/:uid/socket', controller.socketClose)
   
-  
-  //appRouter.get('/credential/verify/:claim', setNoCache, nextIfError(controller.verifyCredentialByClaim))
-  //appRouter.get('/credential/verify/callback', setNoCache, nextIfError(controller.verifyCredentialCallback))
-  
-  // Handle errors
-  // appRouter.use(controller.onError)
-
   return { appRouter, wsRouter, basicRouter }
 }
 export default endpoint
