@@ -14,6 +14,8 @@ tags:
     description: Credential endpoint
   - name: Presentation
     description: Presentation endpoint
+  - name: Issuer
+    description: Issuer endpoint
   
   
 
@@ -207,6 +209,50 @@ paths:
       responses:
         200:
           description: Verify operation status
+        default:
+          description: unexpected error 
+
+  /issuer/subscribe:
+    post:
+      summary: Verify a verifiable presentation by JWT 
+      tags:
+        - Issuer 
+      security:
+        - BasicAuth: []    
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                did:
+                  type: string                    
+      responses:
+        200:
+          description: subscribe operation successful
+        default:
+          description: unexpected error 
+  
+  /issuer/unsubscribe:
+    post:
+      summary: Verify a verifiable presentation by JWT 
+      tags:
+        - Issuer 
+      security:
+        - BasicAuth: []    
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                did:
+                  type: string                    
+      responses:
+        200:
+          description: unsubscribe operation successful
         default:
           description: unexpected error 
 

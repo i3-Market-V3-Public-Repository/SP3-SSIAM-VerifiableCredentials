@@ -199,6 +199,13 @@ class Config {
   }
 
   /**
+   * @property The endpoint of the smart contract revocation & issuer registry
+   */
+   get smartContractRegistry (): string {
+    return this.get('REGISTRY_CONTRACT');
+  }
+
+  /**
    * @property Ngrok uri
    */
   set ngrokUri (v: string) {

@@ -2,6 +2,8 @@
 
 Run the following command in the project root. The first time it will take a while (be patience), since it has to build images and download all the npn dependencies.
 
+Before all, rename the file `template.env` to `.env`
+
 ```console
 ./docker-dev-start
 ```
@@ -15,9 +17,3 @@ If you want to delete and prune all the created images, containers, networks, vo
 ```console
 ./docker-dev-prune
 ```
-
-### TODO
-
-1.  API authentication
-2.  Verify and revoke verifiable credential
-3.  Verifiable presentation management
