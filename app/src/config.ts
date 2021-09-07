@@ -43,6 +43,7 @@ class Config {
       COOKIES_KEYS: generateRandomStrings(32, 3).join(','),
       JWKS_KEYS_PATH: './misc/jwks.json',
       IDENTITY_PATH: './misc/identity.json',
+      CONTRACT_ABI: './misc/smart-contract-registry.json',
 
       RPC_URL: 'https://rinkeby.infura.io/ethr-did',
       WHITELIST: './misc/whitelist.js'
@@ -178,8 +179,24 @@ class Config {
   /**
    * @property Get identity promise. This identity contains a DID and its associated privateKey
    */
+   get smartcontractAbi (): fs.PathLike {
+    return this.get('CONTRACT_ABI')
+  }
+
+  /**
+   * @property Get identity promise. This identity contains a DID and its associated privateKey
+   */
   get identityPromise (): Promise<Identity> {
     return readFilePromise(this.get('IDENTITY_PATH')).then((value) => {
+      return JSON.parse(value.toString())
+    })
+  }
+
+  /**
+   * @property Get identity promise. This identity contains a DID and its associated privateKey
+   */
+   get smartcontractAbiPromise (): Promise<Identity> {
+    return readFilePromise(this.get('CONTRACT_ABI')).then((value) => {
       return JSON.parse(value.toString())
     })
   }

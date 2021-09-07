@@ -114,8 +114,8 @@ paths:
       responses:
         200:
           description: QR code of the credential
-        default:
-          description: unexpected error          
+        500:
+          description: Internal server error
     
   /credential/revoke:
     post:
@@ -136,8 +136,8 @@ paths:
       responses:
         200:
           description: Revoke operation status
-        default:
-          description: unexpected error   
+        500:
+          description: Internal server error   
 
   /credential/verify:
     post:
@@ -154,45 +154,47 @@ paths:
               type: object
               properties:
                 credentialJwt:
+                  type: string
+                credentialIssuer:
                   type: string                    
       responses:
         200:
           description: Verify operation status
-        default:
-          description: unexpected error 
+        500:
+          description: Internal server error 
 
-  /presentation/issue/{did}:
-    post:
-      summary: Create a verifiable presentation for DID
-      description: QR code to scan in order to add a verifiable presentation       
-      tags:
-        - Presentation
-      security:
-        - BasicAuth: []
-      parameters:               
-        - name: did
-          in: path
-          description: DID of the user
-          required: true
-          type: string  
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                presentation:
-                  type: string              
-      responses:
-        200:
-          description: QR code of the credential
-        default:
-          description: unexpected error     
+  #/presentation/issue/{did}:
+  #  post:
+  #    summary: Create a verifiable presentation for DID
+  #    description: QR code to scan in order to add a verifiable presentation       
+  #    tags:
+  #      - Presentation
+  #    security:
+  #      - BasicAuth: []
+  #    parameters:               
+  #      - name: did
+  #        in: path
+  #        description: DID of the user
+  #        required: true
+  #        type: string  
+  #    requestBody:
+  #      required: true
+  #      content:
+  #        application/json:
+  #          schema:
+  #            type: object
+  #            properties:
+  #              presentation:
+  #                type: string              
+  #    responses:
+  #      200:
+  #        description: QR code of the credential
+  #      default:
+  #        description: unexpected error     
       
   /presentation/verify:
     post:
-      summary: Verify a verifiable presentation by JWT 
+      summary: Verify a verifiable presentation by JWT. Used by OIDC authorization server during the authorization code flow 
       tags:
         - Presentation 
       security:
@@ -213,48 +215,30 @@ paths:
           description: unexpected error 
 
   /issuer/subscribe:
-    post:
-      summary: Verify a verifiable presentation by JWT 
+    get:
+      summary: Subscribe this issuer in the i3market trusted issuers list
       tags:
         - Issuer 
       security:
-        - BasicAuth: []    
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                did:
-                  type: string                    
+        - BasicAuth: []          
       responses:
         200:
-          description: subscribe operation successful
-        default:
-          description: unexpected error 
+          description: Subscribe operation successful
+        500:
+          description: Internal server rrror
   
   /issuer/unsubscribe:
-    post:
-      summary: Verify a verifiable presentation by JWT 
+    get:
+      summary: Unsubscribe this issuer from the i3market trusted issuers list
       tags:
         - Issuer 
       security:
-        - BasicAuth: []    
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                did:
-                  type: string                    
+        - BasicAuth: []                   
       responses:
         200:
-          description: unsubscribe operation successful
-        default:
-          description: unexpected error 
+          description: Unsubscribe operation successful
+        500:
+          description: Internal server error
 
 components:
   securitySchemes:
