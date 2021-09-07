@@ -2,7 +2,7 @@ import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
 
 import { WebSocketRouter } from '../../ws'
 import { EndpointLoader } from '../../endpoint'
-import InteractionController from './controller'
+import CredentialController from './controller'
 
 function nextIfError (handler: RequestHandler): RequestHandler {
   return async (req, res, next) => {
@@ -22,7 +22,7 @@ const endpoint: EndpointLoader = async (app, wss) => {
   const appRouter = AppRouter()
   const basicRouter = AppRouter()
   const wsRouter = WebSocketRouter()  
-  const controller = new InteractionController(wss)  
+  const controller = new CredentialController(wss)  
 
   // Wait controller initialization
   await controller.initialize()

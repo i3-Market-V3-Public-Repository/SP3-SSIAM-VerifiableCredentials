@@ -1,4 +1,4 @@
-import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
+import { RequestHandler, Router as AppRouter /*, urlencoded*/ } from 'express'
 
 import { EndpointLoader } from '../../endpoint'
 import IssuerController from './controller'
@@ -18,10 +18,10 @@ const setNoCache: RequestHandler = (req, res, next) => {
 const endpoint: EndpointLoader = async (app) => {
   const appRouter = AppRouter()
   const controller = new IssuerController()
-  const body = urlencoded({ extended: false })
+  //const body = urlencoded({ extended: false })
 
   // Wait controller initialization
-  // await controller.initialize()
+  await controller.initialize()
 
   // Handle view
   appRouter.use((req, res, next) => {
@@ -42,8 +42,8 @@ const endpoint: EndpointLoader = async (app) => {
 
 
   // Setup app routes
-  appRouter.post('/subscribe', setNoCache, body, nextIfError(controller.subscribeIssuer))
-  appRouter.post('/unsubscribe', setNoCache, body, nextIfError(controller.unsubscribeIssuer))
+  appRouter.get('/subscribe', setNoCache, nextIfError(controller.subscribeIssuer))
+  appRouter.get('/unsubscribe', setNoCache, nextIfError(controller.unsubscribeIssuer))
   
   
   
