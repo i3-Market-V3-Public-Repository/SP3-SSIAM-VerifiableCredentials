@@ -13,7 +13,7 @@ import { agent } from './agent'
 // const transports = require('uport-transports').transport
 // const message = require('uport-transports').message.util
 
-import { EthrDID } from 'ethr-did'
+// import { EthrDID } from 'ethr-did'
 import { Issuer } from 'did-jwt-vc'
 import { JwtCredentialPayload, createVerifiableCredentialJwt } from 'did-jwt-vc'
 
@@ -44,36 +44,41 @@ export default class CredentialController {
   protected contractAddress: string;
   protected contract: any;
 
+  protected issuerRegistry: any;
+
   constructor (protected wss: WebSocketServer) { }
 
   public async initialize () {
     //const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }
     this.identity = await config.identityPromise;
     this.smartcontract = await config.smartcontractAbiPromise;
+    this.issuerRegistry = await config.issuerRegistryAbiPromise;
     /*this.credentials = new Credentials({
       did: identity.did,
       signer: SimpleSigner(identity.privateKey),
       resolver: new Resolver(getResolver(providerConfig))
     })*/
     //const identity = await config.identityPromise;
-    
-    /*const issuer: Issuer = new EthrDID({
-      identifier: identity.did,    
-      privateKey: identity.privateKey,
-      //rpcUrl: 'https://rinkeby.infura.io/v3/8a581af7416b4e7681d1f871b6945281',
-      rpcUrl: 'http://127.0.0.1:8545',
-      //chainNameOrId: 'rinkeby'      
-      chainNameOrId: 'ganache'      
+    /*
+    this.issuer: Issuer = new EthrDID({
+      identifier: this.identity.did,    
+      privateKey: this.identity.privateKey,
+      rpcUrl: 'https://rinkeby.infura.io/v3/8a581af7416b4e7681d1f871b6945281',
+      //rpcUrl: 'http://127.0.0.1:8545',
+      chainNameOrId: 'rinkeby'      
+      //chainNameOrId: 'ganache'      
     }) as Issuer;*/
 
     //Contract.setProvider(config.rpcUrl);
+
     Contract.setProvider(config.rpcUrl); 
     this.contractAddress = config.smartContractRegistry;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
+    /*
     this.issuer = new EthrDID({
       identifier: this.identity.did,
       privateKey: this.identity.privateKey
-    }) as Issuer;
+    }) as Issuer;*/
   }
 
   // WebSocket Methods
