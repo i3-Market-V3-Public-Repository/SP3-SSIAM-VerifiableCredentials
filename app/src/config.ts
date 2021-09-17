@@ -167,9 +167,10 @@ class Config {
   /**
    * @property Get identity promise. This identity contains a DID and its associated privateKey
    */
+  /*
    get smartcontractAbi (): fs.PathLike {
     return this.get('CONTRACT_ABI')
-  }
+  }*/
 
   /**
    * @property Get identity promise. This identity contains a DID and its associated privateKey
@@ -181,13 +182,23 @@ class Config {
   }
 
   /**
-   * @property Get identity promise. This identity contains a DID and its associated privateKey
+   * @property Get smart contract revocation registry promise. 
    */
    get smartcontractAbiPromise (): Promise<Identity> {
     return readFilePromise(this.get('CONTRACT_ABI')).then((value) => {
       return JSON.parse(value.toString())
     })
   }
+
+  /**
+   * @property Get smart contract registry for issuers promise. 
+   */
+   get issuerRegistryAbiPromise (): Promise<Identity> {
+    return readFilePromise(this.get('ISSUER_REGISTRY_ABI')).then((value) => {
+      return JSON.parse(value.toString())
+    })
+  }
+  
 
   /**
    * @property Get the RPC URL
@@ -204,10 +215,17 @@ class Config {
   }
 
   /**
-   * @property The endpoint of the smart contract revocation & issuer registry
+   * @property The endpoint of the smart contract registry for credentials revocation 
    */
    get smartContractRegistry (): string {
     return this.get('REGISTRY_CONTRACT');
+  }
+
+  /**
+   * @property The endpoint of the smart contract registry for issuer
+   */
+  get smartContractIssuers (): string {
+    return this.get('ISSUER_REGISTRY_CONTRACT');
   }
 
   /**

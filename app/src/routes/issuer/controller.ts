@@ -16,9 +16,9 @@ export default class IssuerController {
   public async initialize () {
 
     this.identity = await config.identityPromise;    
-    this.smartcontract = await config.smartcontractAbiPromise;
+    this.smartcontract = await config.issuerRegistryAbiPromise;
     Contract.setProvider(config.rpcUrl); 
-    this.contractAddress = config.smartContractRegistry;
+    this.contractAddress = config.smartContractIssuers;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
   }
 
@@ -30,13 +30,13 @@ export default class IssuerController {
     try {
       
       // Call the smart contract function 
-      let response = await this.contract.methods.addTrusted(this.identity.did).send({ from: this.identity.did })     
+      let response = await this.contract.methods.addIssuer(this.identity.did).send({ from: this.identity.did })     
       res.send({
         status: response.status,
         message: 'issuer successfully subscribed',        
         transactionHash: response.transactionHash,
         blockNumber: response.blockNumber,
-        transactionSignature: response.events.Trusted.signature
+        //transactionSignature: response.events.Trusted.signature
       })
 
     } catch (error) {
@@ -60,13 +60,13 @@ export default class IssuerController {
     try {
       
       // Call the smart contract function 
-      let response = await this.contract.methods.removeTrusted(this.identity.did).send({ from: this.identity.did })     
+      let response = await this.contract.methods.removeIssuer(this.identity.did).send({ from: this.identity.did })    
       res.send({
         status: response.status,
         message: 'issuer successfully unsubscribed',        
         transactionHash: response.transactionHash,
         blockNumber: response.blockNumber,
-        transactionSignature: response.events.Trusted.signature
+        //transactionSignature: response.events.Trusted.signature
       })
 
     } catch (error) {
