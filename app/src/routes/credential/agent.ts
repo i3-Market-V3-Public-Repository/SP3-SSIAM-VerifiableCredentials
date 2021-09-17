@@ -42,7 +42,7 @@ import { createConnection } from 'typeorm'
 const DATABASE_FILE = 'database.sqlite'
 
 // You will need to get a project ID from infura https://www.infura.io
-//const INFURA_PROJECT_ID = '-'
+const INFURA_PROJECT_ID = '-'
 
 const dbConnection = createConnection({
   type: 'sqlite',
@@ -51,25 +51,25 @@ const dbConnection = createConnection({
   logging: ['error', 'info', 'warn'],
   entities: Entities,
 })
-/*
+
 const rinkebyProviderData = {
   defaultKms: 'local',
   network: 'rinkeby',
   rpcUrl: 'https://rinkeby.infura.io/v3/' + INFURA_PROJECT_ID,
-}*/
+}
 
-
+/*
 const ganacheProviderData = {
   defaultKms: 'local',
   network: 'ganache',
   rpcUrl: 'http://127.0.0.1:8545',
-}
+}*/
 
 
 
 const resolvers = {
   ...ethrDidResolver({
-    networks: [/*rinkebyProviderData, */ganacheProviderData]
+    networks: [rinkebyProviderData/*, ganacheProviderData*/]
       .map(({network, rpcUrl}) => ({
         name: network,
         rpcUrl
@@ -94,11 +94,11 @@ export const agent = createAgent<
     }),
     new DIDManager({
       store: new DIDStore(dbConnection),
-      //defaultProvider: 'did:ethr:rinkeby',
-      defaultProvider: 'did:ethr:ganache',
+      defaultProvider: 'did:ethr:rinkeby',
+      //defaultProvider: 'did:ethr:ganache',
       providers: {
-        //'did:ethr:rinkeby': new EthrDIDProvider(rinkebyProviderData),
-        'did:ethr:ganache': new EthrDIDProvider(ganacheProviderData),
+        'did:ethr:rinkeby': new EthrDIDProvider(rinkebyProviderData),
+        //'did:ethr:ganache': new EthrDIDProvider(ganacheProviderData),
         'did:web': new WebDIDProvider({
           defaultKms: 'local',
         }),

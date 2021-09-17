@@ -36,9 +36,9 @@ class Config {
       USE_NGROK: '0',
       USE_LOCALHOST_RUN: '0',
 
-      OIDC_PROVIDER_ISSUER: undefined,
-      OIDC_PROVIDER_DB_HOST: 'localhost',
-      OIDC_PROVIDER_DB_PORT: '27017',
+      VC_ISSUER: undefined,
+      VC_DB_HOST: 'localhost',
+      VC_DB_PORT: '27017',
 
       COOKIES_KEYS: generateRandomStrings(32, 3).join(','),
       JWKS_KEYS_PATH: './misc/jwks.json',
@@ -134,18 +134,6 @@ class Config {
    */
    get getContextPath (): string {
     return this.get('CONTEXT_PATH')
-  }
-
-  /**
-   * @property Mongo connection URI
-   */
-  get mongoUri (): string {
-    return [
-      'mongodb://',
-            `${this.get('OIDC_PROVIDER_DB_USERNAME')}:${this.get('OIDC_PROVIDER_DB_PASSWORD')}@`,
-            `${this.get('OIDC_PROVIDER_DB_HOST')}:${this.get('OIDC_PROVIDER_DB_PORT')}/`,
-            `${this.get('OIDC_PROVIDER_DB_DATABASE')}?authSource=admin`
-    ].join('')
   }
 
   /**
@@ -248,6 +236,18 @@ class Config {
       throw new Error('Host not initialized yet')
     }
     return this._host
+  }
+
+  /**
+   * @property Mongo connection URI
+   */
+   get mongoUri (): string {
+    return [
+      'mongodb://',
+            `${this.get('VC_DB_USERNAME')}:${this.get('VC_DB_PASSWORD')}@`,
+            `${this.get('VC_DB_HOST')}:${this.get('VC_DB_PORT')}/`,
+            `${this.get('VC_DB_DATABASE')}?authSource=admin`
+    ].join('')
   }
 }
 

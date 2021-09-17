@@ -163,34 +163,6 @@ paths:
         500:
           description: Internal server error 
 
-  #/presentation/issue/{did}:
-  #  post:
-  #    summary: Create a verifiable presentation for DID
-  #    description: QR code to scan in order to add a verifiable presentation       
-  #    tags:
-  #      - Presentation
-  #    security:
-  #      - BasicAuth: []
-  #    parameters:               
-  #      - name: did
-  #        in: path
-  #        description: DID of the user
-  #        required: true
-  #        type: string  
-  #    requestBody:
-  #      required: true
-  #      content:
-  #        application/json:
-  #          schema:
-  #            type: object
-  #            properties:
-  #              presentation:
-  #                type: string              
-  #    responses:
-  #      200:
-  #        description: QR code of the credential
-  #      default:
-  #        description: unexpected error     
       
   /presentation/verify:
     post:
@@ -211,8 +183,8 @@ paths:
       responses:
         200:
           description: Verify operation status
-        default:
-          description: unexpected error 
+        500:
+          description: Internal server error
 
   /issuer/subscribe:
     get:
