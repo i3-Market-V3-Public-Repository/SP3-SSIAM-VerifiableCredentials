@@ -9,7 +9,7 @@ import { addEndpoint } from './endpoint'
 import WebSocketServer from './ws'
 import { jwks, did } from './security'
 
-import { apiSpecEndpoint, credentialEndpoint, didEndpoint, issuerEndpoint } from './routes'
+import { apiSpecEndpoint, credentialEndpoint, didEndpoint, issuerEndpoint, presentationEndpoint } from './routes'
 /// ///////
 
 async function listenPromise (server: http.Server, port: number): Promise<void> {
@@ -85,6 +85,7 @@ export async function main (): Promise<void> {
   addEndpoint(app, wss, '/credential', await credentialEndpoint(app, wss))
   addEndpoint(app, wss, '/did', await didEndpoint(app, wss))
   addEndpoint(app, wss, '/issuer', await issuerEndpoint(app, wss))
+  addEndpoint(app, wss, '/presentation', await presentationEndpoint(app, wss))
 
 
   // Add static files (css and js)

@@ -182,8 +182,9 @@ export default class CredentialController {
 
       // Call the smart contract function 
       let blockNumber = await this.contract.methods.revoked(req.body.credentialIssuer, digest).call()
-    
+
       if(blockNumber === '0') {
+        // TODO: controllare anche che sia trusted issuer
         res.send({ 
           status: true,
           message: 'credential not revoked' 
