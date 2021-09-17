@@ -41,9 +41,6 @@ import { createConnection } from 'typeorm'
 // This will be the name for the local sqlite database for demo purposes
 const DATABASE_FILE = 'database.sqlite'
 
-// You will need to get a project ID from infura https://www.infura.io
-const INFURA_PROJECT_ID = '-'
-
 const dbConnection = createConnection({
   type: 'sqlite',
   database: DATABASE_FILE,
@@ -55,7 +52,7 @@ const dbConnection = createConnection({
 const rinkebyProviderData = {
   defaultKms: 'local',
   network: 'rinkeby',
-  rpcUrl: 'https://rinkeby.infura.io/v3/' + INFURA_PROJECT_ID,
+  rpcUrl: 'https://rinkeby.infura.io/ethr-did'
 }
 
 /*

@@ -120,13 +120,14 @@ export default class CredentialController {
     /*
     TODO: check correctness of this
     Create an identifier and optionally link to an existing user 
+    */
     const user = await agent.didManagerGetOrCreate({
       alias: 'VCservice'
-    })*/
+    })
 
     const credential = await agent.createVerifiableCredential({
       credential: {
-        issuer: { id: /*user.did*/ this.issuer.toString() },
+        issuer: { id: user.did /*this.issuer.toString()*/ },
         credentialSubject: credentialPayload
       },
       proofFormat: 'jwt',
