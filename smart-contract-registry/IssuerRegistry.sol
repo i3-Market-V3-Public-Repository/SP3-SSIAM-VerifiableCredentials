@@ -3,7 +3,6 @@ pragma solidity ^0.5.8;
 contract IssuerRegistry {
 
     mapping (address => uint) private issuers;
-    
 
     function addIssuer(address _wallet) public {
         require (issuers[_wallet] == 0);
@@ -12,8 +11,8 @@ contract IssuerRegistry {
     }
     
     function removeIssuer(address _wallet) public {
-        require (issuers[_wallet] == 0);
-        issuers[_wallet] = block.number;
+        require (issuers[_wallet] != 0);
+        issuers[_wallet] = 0;
         emit Trusted(msg.sender, _wallet);
     }
 
