@@ -17,7 +17,7 @@ contract IssuerRegistry {
         emit Trusted(msg.sender, _wallet);
     }
 
-    function isTrusted(address _wallet) public view returns (bool) {
+    function isTrusted(address _wallet) public view returns (uint) {
         return issuers[_wallet];
     }
     
