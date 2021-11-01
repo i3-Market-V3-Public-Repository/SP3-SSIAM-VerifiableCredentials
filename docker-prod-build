@@ -1,4 +1,4 @@
 #!/bin/sh
 SCRIPT_DIR=$(dirname "$0")
-docker build -t i3market/verifiable-credentials ${SCRIPT_DIR}
-docker tag i3market/verifiable-credentials registry.gitlab.com/i3-market/code/wp3/t3.1-self-sovereign-identity-and-access-management/verifiable-credentials
+docker build -t i3market/verifiable-credentials ${SCRIPT_DIR} --no-cache
+docker tag i3market/verifiable-credentials registry.gitlab.com/i3-market/code/wp3/t3.1-self-sovereign-identity-and-access-management/verifiable-credentials:release-2

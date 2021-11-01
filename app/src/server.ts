@@ -27,7 +27,6 @@ export async function main (): Promise<void> {
     logger.info('Using production environment')
   }
 
-
   const port = config.port
 
   // Connect to ngrok
@@ -64,8 +63,8 @@ export async function main (): Promise<void> {
 
 
   // Add middlewares
+  
   app.use(loggerMiddleware)
-
   /**
    * TODO:
    * Force proto https if reverse proxy. Header x-forwarded-proto must be setted by the proxy
@@ -81,21 +80,18 @@ export async function main (): Promise<void> {
   }
 
   // Add endpoints
-  addEndpoint(app, wss, '/api-spec', await apiSpecEndpoint(app, wss))
-  addEndpoint(app, wss, '/credential', await credentialEndpoint(app, wss))
-  addEndpoint(app, wss, '/did', await didEndpoint(app, wss))
-  addEndpoint(app, wss, '/issuer', await issuerEndpoint(app, wss))
-  addEndpoint(app, wss, '/presentation', await presentationEndpoint(app, wss))
-
+  addEndpoint(app, wss, '/release2/vc/api-spec', await apiSpecEndpoint(app, wss))
+  addEndpoint(app, wss, '/release2/vc/credential', await credentialEndpoint(app, wss))
+  addEndpoint(app, wss, '/release2/vc/did', await didEndpoint(app, wss))
+  addEndpoint(app, wss, '/release2/vc/issuer', await issuerEndpoint(app, wss))
+  addEndpoint(app, wss, '/release2/vc/presentation', await presentationEndpoint(app, wss))
 
   // Add static files (css and js)
   const publicDir = path.resolve(__dirname, 'public')
   app.use('/', express.static(publicDir))
 
   // Listen
-  
   await listenPromise(server, port)
-
 
   // Log connection information
   logger.info(`Application is listening on port ${config.port}`)  
