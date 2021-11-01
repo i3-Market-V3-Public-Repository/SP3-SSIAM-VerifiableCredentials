@@ -17,7 +17,7 @@ import { KeyManager } from '@veramo/key-manager'
 // Custom key management system for RN
 import { KeyManagementSystem } from '@veramo/kms-local'
 
-//import { ISelectiveDisclosure, SelectiveDisclosure, SdrMessageHandler } from '@veramo/selective-disclosure'
+// import { ISelectiveDisclosure, SelectiveDisclosure, SdrMessageHandler } from '@veramo/selective-disclosure'
 
 // 
 // import { MessageHandler } from '@veramo/message-handler'
@@ -49,30 +49,35 @@ const dbConnection = createConnection({
   entities: Entities,
 })
 
-const rinkebyProviderData = {
+// Veramo config
+ 
+const RINKEBY_PROVIDER_DATA = {
   defaultKms: 'local',
   network: 'rinkeby',
   rpcUrl: 'https://rinkeby.infura.io/ethr-did'
 }
 
-/*
-const ganacheProviderData = {
+const I3M_PROVIDER_DATA = {
+  defaultKms: 'local',
+  network: 'i3m',
+  rpcUrl: 'http://95.211.3.250:8545'
+}
+
+const GANACHE_PROVIDER_DATA = {
   defaultKms: 'local',
   network: 'ganache',
-  rpcUrl: 'http://127.0.0.1:8545',
-}*/
-
-
+  rpcUrl: 'http://127.0.0.1:8545'
+}
 
 const resolvers = {
   ...ethrDidResolver({
-    networks: [rinkebyProviderData/*, ganacheProviderData*/]
-      .map(({network, rpcUrl}) => ({
+    networks: [I3M_PROVIDER_DATA, RINKEBY_PROVIDER_DATA, GANACHE_PROVIDER_DATA]
+      .map(({ network, rpcUrl }) => ({
         name: network,
         rpcUrl
       }))
   }),
-  ...webDidResolver(),
+  ...webDidResolver()
 }
 
 export const resolver = new Resolver(resolvers)
@@ -92,13 +97,13 @@ export const agent = createAgent<
     new DIDManager({
       store: new DIDStore(dbConnection),
       defaultProvider: 'did:ethr:rinkeby',
+      //defaultProvider: 'did:ethr:i3m',
       //defaultProvider: 'did:ethr:ganache',
       providers: {
-        'did:ethr:rinkeby': new EthrDIDProvider(rinkebyProviderData),
-        //'did:ethr:ganache': new EthrDIDProvider(ganacheProviderData),
-        'did:web': new WebDIDProvider({
-          defaultKms: 'local',
-        }),
+        'did:ethr:rinkeby': new EthrDIDProvider(RINKEBY_PROVIDER_DATA),
+        'did:ethr:i3m': new EthrDIDProvider(I3M_PROVIDER_DATA),
+        'did:ethr:ganache': new EthrDIDProvider(GANACHE_PROVIDER_DATA),
+        'did:web': new WebDIDProvider({ defaultKms: 'local', })
       },
     }),
     new CredentialIssuer()

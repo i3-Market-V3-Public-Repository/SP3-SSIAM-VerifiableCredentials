@@ -9,12 +9,15 @@ FROM node:14
 COPY --from=builder /app/dist /app/dist
 COPY ./production.env ./docker-compose.yaml ./app/package.json ./app/package-lock.json /app/
 COPY ./docker/template ./docker/entrypoint ./docker/init-volumes /usr/local/bin/
-COPY ./app/misc/whitelist.js /app/default/misc/
+COPY ./app/misc/whitelist.js /app/misc/
+COPY ./app/misc/credential-registry.json /app/misc/
+COPY ./app/misc/issuer-registry.json /app/misc/
+COPY ./app/misc/identity.json /app/misc/
 
 
 WORKDIR /app
 RUN npm i --only=prod
 
-EXPOSE 4000
+EXPOSE 4200
 
 CMD ["entrypoint"]

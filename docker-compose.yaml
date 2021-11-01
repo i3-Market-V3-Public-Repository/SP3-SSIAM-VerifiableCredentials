@@ -9,10 +9,9 @@ services:
       - production.env
     networks:
       - reverse-proxy
-    environment:
-      - OIDC_PROVIDER_REVERSE_PROXY=true
     volumes:
       - ./volumes/misc:/app/misc
+      - ./volumes/database.sqlite:./app/database.sqlite
 
 networks:  
   reverse-proxy:

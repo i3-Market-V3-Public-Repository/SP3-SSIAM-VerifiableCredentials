@@ -20,7 +20,7 @@ tags:
   
 
 paths:
-  /did/{callbackUrl}:    
+  /release2/vc/did/{callbackUrl}:    
     get:
       summary: Obtain the user DID - uPort flow
       description: QR to scan in order to retrive the user's DID      
@@ -45,7 +45,7 @@ paths:
               schema:
                 $ref: "./schema/error.yaml#/Error"
 
-  /credential:    
+  /release2/vc/credential:    
     get:
       summary: Get the credential list
       description: Get the credential list
@@ -63,7 +63,7 @@ paths:
               schema:
                 $ref: "./schema/error.yaml#/Error"
 
-  /credential/issue/{credential}:    
+  /release2/vc/credential/issue/{credential}:    
     get:
       summary: Create a new credential with Veramo framework
       description: Create a new credential with Veramo framework
@@ -87,7 +87,7 @@ paths:
               schema:
                 $ref: "./schema/error.yaml#/Error"
 
-  /credential/issue/{did}:
+  /release2/vc/credential/issue/{did}:
     post:
       summary: Create a credential for DID - uPort flow
       description: QR code to scan in order to add a verifiable credential       
@@ -117,7 +117,7 @@ paths:
         500:
           description: Internal server error
     
-  /credential/revoke:
+  /release2/vc/credential/revoke:
     post:
       summary: Revoke a credential by JWT 
       tags:
@@ -139,7 +139,7 @@ paths:
         500:
           description: Internal server error   
 
-  /credential/verify:
+  /release2/vc/credential/verify:
     post:
       summary: Verify a credential by JWT 
       tags:
@@ -156,15 +156,14 @@ paths:
                 credentialJwt:
                   type: string
                 credentialIssuer:
-                  type: string                    
+                  type: string
       responses:
         200:
           description: Verify operation status
         500:
           description: Internal server error 
-
       
-  /presentation/verify:
+  /release2/vc/presentation/verify:
     post:
       summary: Verify a verifiable presentation by JWT. Used by OIDC authorization server during the authorization code flow 
       tags:
@@ -186,7 +185,7 @@ paths:
         500:
           description: Internal server error
 
-  /issuer/subscribe:
+  /release2/vc/issuer/subscribe:
     get:
       summary: Subscribe this issuer in the i3market trusted issuers list
       tags:
@@ -199,7 +198,7 @@ paths:
         500:
           description: Internal server rrror
   
-  /issuer/unsubscribe:
+  /release2/vc/issuer/unsubscribe:
     get:
       summary: Unsubscribe this issuer from the i3market trusted issuers list
       tags:
@@ -209,6 +208,19 @@ paths:
       responses:
         200:
           description: Unsubscribe operation successful
+        500:
+          description: Internal server error
+
+  /release2/vc/issuer/verify:
+    get:
+      summary: Verify the subscription status of the issuer
+      tags:
+        - Issuer 
+      security:
+        - BasicAuth: []                   
+      responses:
+        200:
+          description: Registration status of the issuer
         500:
           description: Internal server error
 

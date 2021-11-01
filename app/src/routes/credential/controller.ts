@@ -16,6 +16,10 @@ import { agent } from './agent'
 // import { EthrDID } from 'ethr-did'
 import { Issuer } from 'did-jwt-vc'
 import { JwtCredentialPayload, createVerifiableCredentialJwt } from 'did-jwt-vc'
+import { IIdentifier } from '@veramo/core'
+
+import { ethers } from 'ethers'
+import { decodeJWT } from 'did-jwt'
 
 // import { EthrCredentialRevoker } from 'ethr-status-registry'
 // import { sign } from 'ethjs-signer'
@@ -23,7 +27,6 @@ import { JwtCredentialPayload, createVerifiableCredentialJwt } from 'did-jwt-vc'
 
 const web3 = require("web3");
 var Contract = require('web3-eth-contract');
-//const config = require('./config')
 
 
 
@@ -40,45 +43,60 @@ export default class CredentialController {
   //protected credentials: Credentials
   protected issuer: Issuer;
   protected smartcontract: any;
+  protected smartcontractIssuer: any;
   protected identity: any;
   protected contractAddress: string;
+  protected contractAddressIssuer: string;
   protected contract: any;
-
-  protected issuerRegistry: any;
+  protected contractIssuer: any;
+  protected veramoIdentity: IIdentifier;
+  protected provider: ethers.providers.JsonRpcProvider;
 
   constructor (protected wss: WebSocketServer) { }
 
   public async initialize () {
-    //const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }
-    this.identity = await config.identityPromise;
-    this.smartcontract = await config.smartcontractAbiPromise;
-    this.issuerRegistry = await config.issuerRegistryAbiPromise;
-    /*this.credentials = new Credentials({
-      did: identity.did,
-      signer: SimpleSigner(identity.privateKey),
-      resolver: new Resolver(getResolver(providerConfig))
-    })*/
-    //const identity = await config.identityPromise;
-    /*
-    this.issuer: Issuer = new EthrDID({
-      identifier: this.identity.did,    
-      privateKey: this.identity.privateKey,
-      rpcUrl: 'https://rinkeby.infura.io/v3/8a581af7416b4e7681d1f871b6945281',
-      //rpcUrl: 'http://127.0.0.1:8545',
-      chainNameOrId: 'rinkeby'      
-      //chainNameOrId: 'ganache'      
-    }) as Issuer;*/
-
-    //Contract.setProvider(config.rpcUrl);
-
+    
+    // initialize credential registry contract
     Contract.setProvider(config.rpcUrl); 
+    this.identity = await config.identityPromise;
+    this.smartcontract = await config.smartcontractAbiPromise;        
     this.contractAddress = config.smartContractRegistry;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
-    /*
-    this.issuer = new EthrDID({
-      identifier: this.identity.did,
-      privateKey: this.identity.privateKey
-    }) as Issuer;*/
+    this.smartcontractIssuer = await config.issuerRegistryAbiPromise;    
+    this.contractAddressIssuer = config.smartContractIssuers;
+    this.contractIssuer = new Contract(this.smartcontractIssuer.abi, this.contractAddressIssuer);
+
+    // initialize ethers js rpc
+    this.provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
+
+    // initialize veramo identity
+    try {
+      this.veramoIdentity = await agent.didManagerGetByAlias({
+        alias: 'VCservice',
+        provider: 'did:ethr:i3m'
+      })  
+    } catch (error) {
+      logger.error(error)
+      logger.debug('Identity not found in the Veramo database. Creating a new Veramo identity from identity.json ...')
+
+      this.veramoIdentity = await agent.didManagerImport({
+        did: `did:ethr:i3m:${this.identity.did}`,
+        keys: [{
+          type: 'Secp256k1',
+          kid: this.identity.did.substring(2),
+          publicKeyHex: this.identity.did.substring(2),
+          privateKeyHex: this.identity.privateKey.substring(2),
+          kms: 'local'
+        }],
+        controllerKeyId: this.identity.did.substring(2),
+        provider: 'did:ethr:i3m',
+        alias: 'VCservice',
+        services: []
+      })
+
+      logger.debug('New identity created')
+    }
+    
   }
 
   // WebSocket Methods
@@ -101,7 +119,7 @@ export default class CredentialController {
   /**
    * Veramo
    * 
-   * GET /credential/issue/{credential} - render the page to create a new credential 
+   * GET /credential/issue/{credential} - render the HTML page that will communicate with the i3market wallet
    */
    addVeramoCredential: RequestHandler = async (req, res, next) => {    
 
@@ -122,18 +140,14 @@ export default class CredentialController {
     let credentialPayload = JSON.parse(req.params.credential)
     credentialPayload.id = req.params.did
 
-    /*
-    TODO: check correctness of this
-    Create an identifier and optionally link to an existing user 
-    */
-    const user = await agent.didManagerGetOrCreate({
-      alias: 'VCservice'
-    })
-
     const credential = await agent.createVerifiableCredential({
       credential: {
-        issuer: { id: user.did /*this.issuer.toString()*/ },
-        credentialSubject: credentialPayload
+        issuer: { id: this.veramoIdentity.did },
+        credentialSubject: credentialPayload,
+        credentialStatus: {
+          id: config.rpcUrl, // rpc url of besu blockchain
+          type: config.smartContractRegistry // address of credential revocation registry
+        }
       },
       proofFormat: 'jwt',
       save: false
@@ -150,28 +164,69 @@ export default class CredentialController {
    */      
   revokeCredentialByJWT: RequestHandler = async (req, res, next) => {
 
+    let decodedJWT;
+    let credentialIssuer;
+
+    // check if the credential passed in input is actually a W3C verifiable credential      
+    try {
+
+      decodedJWT = decodeJWT(req.body.credentialJwt)
+
+      // remove blockchain prefix from address (e.g. did:ethr:rinkeby:) to extract the issuer address
+      const index = decodedJWT.payload.iss.indexOf("0x")   
+      credentialIssuer = decodedJWT.payload.iss.substring(index)
+      console.log(credentialIssuer)      
+
+    } catch (error) {
+
+      res.status(500).send({ 
+        error: 'error: invalid verifiable credential', 
+        log: 'The jwt passed in input does not represent a W3C verifiable credential'
+      })
+    }     
+
     try {
 
       // Generate the digest from the JWT of the credential
       const digest = web3.utils.sha3(req.body.credentialJwt).toString('hex')
-
-      // Call the smart contract function 
-      let response = await this.contract.methods.revoke(digest).send({ from: this.identity.did })  
-      res.send({
-        status: response.status,
-        message: 'credential successfully revoked',        
-        transactionHash: response.transactionHash,
-        blockNumber: response.blockNumber,
-        transactionSignature: response.events.Revoked.signature
-      })
       
-    } catch (error) {
+      const fromAddress = `0x${this.veramoIdentity.controllerKeyId}`
+      const nonce = await this.provider.getTransactionCount(fromAddress)
 
+      const txData = {        
+        nonce,
+        gasLimit: web3.utils.toHex(2500000),
+        gasPrice: web3.utils.toHex(10e9), // 10 Gwei
+        to: this.contractAddress,
+        from: fromAddress,
+        data: this.contract.methods.revoke(digest).encodeABI()
+      }
+
+      const signedTransaction = await agent.keyManagerSignEthTX({
+        kid: this.veramoIdentity.controllerKeyId ?? '',
+        transaction: txData
+      })
+
+      const transactionResponse = await this.provider.sendTransaction(signedTransaction);
+      const receipt = await transactionResponse.wait();
+
+      // logger.debug('receipt')
+      // logger.debug(JSON.stringify(receipt))
+
+      res.send({
+        message: 'credential revoked successfully',
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        blockHash: receipt.blockHash,
+        cumulativeGasUsed: receipt.cumulativeGasUsed
+      })
+
+    } catch (error) {
+      logger.error(error)
       res.status(500).send({ 
         error: 'error: something went wrong while executing the transaction', 
         log: error
       })
-
     }
  
   }
@@ -180,24 +235,55 @@ export default class CredentialController {
    * POST /credential/verify - nel body il JWT
    */
   verifyCredentialByJWT: RequestHandler = async (req, res, next) => {
+      
+    let decodedJWT;
+    let credentialIssuer;
 
+    // check if the credential passed in input is actually a W3C verifiable credential      
     try {
 
-      // Generate the digest from the JWT of the credential
-      const digest = web3.utils.sha3(req.body.credentialJwt).toString('hex')
+      decodedJWT = decodeJWT(req.body.credentialJwt)
 
+      // remove blockchain prefix from address (e.g. did:ethr:rinkeby:) to extract the issuer address
+      const index = decodedJWT.payload.iss.indexOf("0x")   
+      credentialIssuer = decodedJWT.payload.iss.substring(index)      
+
+    } catch (error) {
+
+      res.status(500).send({ 
+        error: 'error: invalid verifiable credential', 
+        log: 'The jwt passed in input does not represent a W3C verifiable credential'
+      })
+    }     
+
+    // Generate the digest from the JWT of the credential
+    const digest = web3.utils.sha3(req.body.credentialJwt).toString('hex')
+
+    const revoker = req.body.credentialIssuer ?? credentialIssuer;    
+
+    try {
       // Call the smart contract function 
-      let blockNumber = await this.contract.methods.revoked(req.body.credentialIssuer, digest).call()
+      let blockNumber = await this.contract.methods.revoked(revoker, digest).call()
 
       if(blockNumber === '0') {
-        // TODO: controllare anche che sia trusted issuer
+        // credential valid, now check the if the credential issuer is valid, otherwise send an error (status 2)
+        let blockNumberIssuer = await this.contractIssuer.methods.isTrusted(credentialIssuer).call()
+        
+        if(blockNumberIssuer === '0') {        
+          res.send({ 
+            status: 2,
+            message: 'untrusted credential issuer' 
+          })
+        }
+
+        console.log(blockNumberIssuer)
         res.send({ 
-          status: true,
+          status: 0,
           message: 'credential not revoked' 
         })
       } else {
         res.send({ 
-          status: true,
+          status: 1,
           message: 'credential revoked', 
           transactionNumber: blockNumber
         })
@@ -222,7 +308,7 @@ export default class CredentialController {
   }
 
   /**
-   * uPort flow
+   * uPort flow - deprecated
    * 
    * POST /credential/issue/{did} - create a new credential
    */

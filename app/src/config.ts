@@ -43,7 +43,7 @@ class Config {
       COOKIES_KEYS: generateRandomStrings(32, 3).join(','),
       JWKS_KEYS_PATH: './misc/jwks.json',
       IDENTITY_PATH: './misc/identity.json',
-      CONTRACT_ABI: './misc/smart-contract-registry.json',
+      CONTRACT_ABI: './misc/credential-registry.json',
 
       RPC_URL: 'https://rinkeby.infura.io/ethr-did',
       WHITELIST: './misc/whitelist.js'

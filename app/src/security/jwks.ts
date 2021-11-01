@@ -34,8 +34,11 @@ export const jwks = async (jwksOptions: Partial<JwksOptions>): Promise<void> => 
     jwks.push(jwk)
   }
   return await new Promise((resolve, reject) => {
-    writeFile(path.resolve(rootDir, options.dstFilePath), JSON.stringify(jwks), (err) => {
-      if (err !== null) throw err as Error
+    writeFile(path.resolve(rootDir, options.dstFilePath), JSON.stringify(jwks), (err) => {      
+      if (err !== null && err !== undefined) {
+        console.log(err)
+        throw err as Error
+      }
       else return resolve()
     })
   })

@@ -38,14 +38,11 @@ const endpoint: EndpointLoader = async (app) => {
     }
     next()
   })
-  
-
 
   // Setup app routes
   appRouter.get('/subscribe', setNoCache, nextIfError(controller.subscribeIssuer))
   appRouter.get('/unsubscribe', setNoCache, nextIfError(controller.unsubscribeIssuer))
-  
-  
+  appRouter.get('/verify', setNoCache, nextIfError(controller.verifyTrustedIssuer))
   
   // Handle errors
   // appRouter.use(controller.onError)
