@@ -1,4 +1,4 @@
-version: '3.6'
+version: '2.2'
 
 services:
   vc-service-app:
@@ -20,8 +20,8 @@ services:
       - 127.0.0.1:9228:9228
     command:
       - ./scripts/start.sh
-    networks:
-      - vc-service-net
+    #networks:
+    #  - vc-service-net
     #  - reverse-proxy
     #depends_on:
     #  - oidc-provider-db
@@ -34,7 +34,7 @@ services:
    # ports:
    #   - 27017:27018
     #  - oidc-mongo:/data/db      
-   ## volumes:
+   # volumes:
     #command: --quiet --setParameter logLevel=0
     #networks:
     #  - vc-service-net

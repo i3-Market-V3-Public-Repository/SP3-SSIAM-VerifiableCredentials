@@ -122,10 +122,10 @@ export default class CredentialController {
    * GET /credential/issue/{credential} - render the HTML page that will communicate with the i3market wallet
    */
    addVeramoCredential: RequestHandler = async (req, res, next) => {    
-
     return res.render('create_veramo_credential', {
       title: '', 
-      credential: req.params.credential
+      credential: req.params.credential,
+      callbackUrl: req.params.callbackUrl
     });
 
   }
@@ -136,7 +136,6 @@ export default class CredentialController {
    * GET /credential/{did}/{credential} - callback to create credential using Veramo framework
    */
   addCredentialByDidAndCredentialString: RequestHandler = async (req, res, next) => {
-    
     let credentialPayload = JSON.parse(req.params.credential)
     credentialPayload.id = req.params.did
 
@@ -153,7 +152,7 @@ export default class CredentialController {
       save: false
     })
 
-    console.log(credential)
+    // console.log(credential)
     res.send(credential)
   
   }
