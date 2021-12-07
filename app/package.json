@@ -84,7 +84,7 @@
     "uport-credentials": "^1.3.5",
     "uport-transports": "^0.2.6",
     "web-did-resolver": "^2.0.4",
-    "web3": "^1.5.2",
+    "web3": "1.6.0",
     "winston": "^3.3.3",
     "ws": "^7.4.3"
   },

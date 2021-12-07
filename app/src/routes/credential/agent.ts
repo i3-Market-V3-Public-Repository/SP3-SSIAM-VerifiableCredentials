@@ -1,5 +1,5 @@
 // Core interfaces
-import { createAgent, IDIDManager, IKeyManager/*, IResolver, IDataStore, IMessageHandler*/} from '@veramo/core'
+import { createAgent, IDIDManager, IKeyManager } from '@veramo/core'
 
 // Core identity manager plugin
 import { DIDManager } from '@veramo/did-manager'
@@ -17,23 +17,16 @@ import { KeyManager } from '@veramo/key-manager'
 // Custom key management system for RN
 import { KeyManagementSystem } from '@veramo/kms-local'
 
-// import { ISelectiveDisclosure, SelectiveDisclosure, SdrMessageHandler } from '@veramo/selective-disclosure'
-
-// 
-// import { MessageHandler } from '@veramo/message-handler'
-// import { JwtMessageHandler } from '@veramo/did-jwt'
-
 //
-import { CredentialIssuer, ICredentialIssuer/*, W3cMessageHandler */} from '@veramo/credential-w3c'
+import { CredentialIssuer, ICredentialIssuer} from '@veramo/credential-w3c'
 
 // Custom resolvers
-// import { DIDResolverPlugin } from '@veramo/did-resolver'
 import { Resolver } from 'did-resolver'
 import { getResolver as ethrDidResolver } from 'ethr-did-resolver'
 import { getResolver as webDidResolver } from 'web-did-resolver'
 
 // Storage plugin using TypeOrm
-import { Entities, KeyStore, DIDStore/*, IDataStoreORM , DataStore, DataStoreORM*/ } from '@veramo/data-store'
+import { Entities, KeyStore, DIDStore } from '@veramo/data-store'
 
 // TypeORM is installed with `@veramo/data-store`
 import { createConnection } from 'typeorm'
@@ -82,11 +75,7 @@ const resolvers = {
 
 export const resolver = new Resolver(resolvers)
 
-export const agent = createAgent<
-  IDIDManager & IKeyManager & ICredentialIssuer /*& IDataStore & IDataStoreORM & IResolver &
-  ISelectiveDisclosure & IMessageHandler  & IDataStore &
-  IDataStoreORM*/
->({
+export const agent = createAgent<IDIDManager & IKeyManager & ICredentialIssuer>({
   plugins: [
     new KeyManager({
       store: new KeyStore(dbConnection),
@@ -107,21 +96,5 @@ export const agent = createAgent<
       },
     }),
     new CredentialIssuer()
-    
-    /*,
-    new SelectiveDisclosure(),
-    new DataStore(dbConnection),
-    new DataStoreORM(dbConnection),
-    new MessageHandler({
-      messageHandlers: [
-        new JwtMessageHandler(),
-        new SdrMessageHandler(),
-        new W3cMessageHandler(),
-      ]
-    }),
-    new DIDResolverPlugin({
-      resolver
-    }),
-    */
   ],
 })

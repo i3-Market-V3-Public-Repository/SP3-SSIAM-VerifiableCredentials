@@ -27,9 +27,10 @@ export default class IssuerController {
     Contract.setProvider(config.rpcUrl); 
     this.contractAddress = config.smartContractIssuers;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
+    const rpcUrl = config.rpcUrl;
 
     // initialize ethers
-    this.provider = new ethers.providers.JsonRpcProvider('http://95.211.3.250:8545');
+    this.provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
     // initialize veramo identity
     try {
@@ -110,6 +111,7 @@ export default class IssuerController {
   * GET /issuer/unsubscribe
   */
   unsubscribeIssuer: RequestHandler = async (req, res, next) => {
+    
     
     try {
       

@@ -49,7 +49,7 @@ const endpoint: EndpointLoader = async (app, wss) => {
   appRouter.post('/issue/:did', setNoCache, body, nextIfError(controller.addCredentialByDid)) 
 
   // Veramo routes
-  appRouter.get('/issue/:credential', setNoCache, nextIfError(controller.addVeramoCredential)) 
+  appRouter.get('/issue/:credential/callbackUrl/:callbackUrl', setNoCache, nextIfError(controller.addVeramoCredential)) 
   appRouter.get('/issue/:did/:credential', setNoCache, nextIfError(controller.addCredentialByDidAndCredentialString)) 
 
   // To be implemented

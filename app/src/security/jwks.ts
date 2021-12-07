@@ -2,15 +2,16 @@ import generateKeyPair from 'jose/util/generate_key_pair'
 import fromKeyLike, { JWK } from 'jose/jwk/from_key_like'
 import { AsymmetricSigningAlgorithm } from 'oidc-provider'
 import config from '../config'
-import { writeFile } from 'fs'
+import { PathLike, writeFile } from 'fs'
 import path from 'path'
 import logger from '../logger'
+
 
 const rootDir = path.resolve(__dirname, '../..')
 
 interface JwksOptions {
   keys: AsymmetricSigningAlgorithm[]
-  dstFilePath: string
+  dstFilePath: PathLike
 }
 
 const defaultOptions: JwksOptions = {
@@ -34,12 +35,13 @@ export const jwks = async (jwksOptions: Partial<JwksOptions>): Promise<void> => 
     jwks.push(jwk)
   }
   return await new Promise((resolve, reject) => {
-    writeFile(path.resolve(rootDir, options.dstFilePath), JSON.stringify(jwks), (err) => {      
-      if (err !== null && err !== undefined) {
-        console.log(err)
-        throw err as Error
-      }
-      else return resolve()
+    writeFile(path.resolve(rootDir, options.dstFilePath.toString()), JSON.stringify(jwks), (err) => {    
+      if (err !== null && err !== undefined) { 
+        throw err as Error        
+      }      
+      else {
+        return resolve()
+      } 
     })
   })
 }

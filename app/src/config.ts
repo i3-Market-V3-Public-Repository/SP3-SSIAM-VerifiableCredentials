@@ -24,13 +24,12 @@ class Config {
   protected _host?: string
 
   constructor () {
-    const defaultPort = '4000'
 
     this.defaults = {
       NODE_ENV: 'development',
 
       SERVER_PUBLIC_URI: 'http://localhost:4000',
-      HOST_PORT: defaultPort,
+      HOST_PORT: '4000',
 
       REVER_PROXY: '0',
       USE_NGROK: '0',
@@ -43,9 +42,15 @@ class Config {
       COOKIES_KEYS: generateRandomStrings(32, 3).join(','),
       JWKS_KEYS_PATH: './misc/jwks.json',
       IDENTITY_PATH: './misc/identity.json',
-      CONTRACT_ABI: './misc/credential-registry.json',
+      CONTEXT_PATH: '/release2/vc',
 
-      RPC_URL: 'https://rinkeby.infura.io/ethr-did',
+      CONTRACT_ABI: './misc/credential-registry.json',
+      REGISTRY_CONTRACT: '0x43978149D2ae5805a590DB162412aaDfb3f2336e',
+
+      ISSUER_REGISTRY_ABI: './misc/issuer-registry.json',
+      ISSUER_REGISTRY_CONTRACT: '0x7E99D17acECB41aB2131acB26c95A8f90af0d10f',
+
+      RPC_URL: 'http://95.211.3.250:8545',
       WHITELIST: './misc/whitelist.js'
     }
   }
@@ -112,7 +117,7 @@ class Config {
     * @property Server port
     */
   get port (): number {
-    return this.get('SERVER_PORT', this.fromInteger)
+    return this.get('SERVER_PORT', this.fromInteger) | 4000
   }
 
   /**
@@ -146,7 +151,7 @@ class Config {
   /**
    * @property Path for the jwks keys used by the OIDC
    */
-  get jwksKeysPath (): string {
+  get jwksKeysPath (): fs.PathLike {
     return this.get('JWKS_KEYS_PATH')
   }
 
@@ -184,7 +189,7 @@ class Config {
   /**
    * @property Get smart contract revocation registry promise. 
    */
-   get smartcontractAbiPromise (): Promise<Identity> {
+   get smartcontractAbiPromise (): Promise<any> {
     return readFilePromise(this.get('CONTRACT_ABI')).then((value) => {
       return JSON.parse(value.toString())
     })
