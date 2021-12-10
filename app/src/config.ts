@@ -29,9 +29,10 @@ class Config {
       NODE_ENV: 'development',
 
       SERVER_PUBLIC_URI: 'http://localhost:4000',
-      HOST_PORT: '4000',
+      HOST_PORT: '4200',
+      SERVER_PORT: '4200',
 
-      REVER_PROXY: '0',
+      REVERSE_PROXY: '0',
       USE_NGROK: '0',
       USE_LOCALHOST_RUN: '0',
 
@@ -117,15 +118,9 @@ class Config {
     * @property Server port
     */
   get port (): number {
-    return this.get('SERVER_PORT', this.fromInteger) | 4000
-  }
-
-  /**
-   * @property Host port
-   */
-  get hostPort (): number {
-    return this.get('HOST_PORT', this.fromInteger)
-  }
+    console.log(this.get('SERVER_PORT', this.fromInteger), typeof this.get('SERVER_PORT', this.fromInteger))
+    return this.get('SERVER_PORT', this.fromInteger)
+  } 
 
   /**
    * @property Reverse proxy
@@ -190,7 +185,11 @@ class Config {
    * @property Get smart contract revocation registry promise. 
    */
    get smartcontractAbiPromise (): Promise<any> {
+    console.log('get smartcontractAbiPromise')
+    console.log('this.get(\'CONTRACT_ABI\')', this.get('CONTRACT_ABI'))
     return readFilePromise(this.get('CONTRACT_ABI')).then((value) => {
+      console.log('value')
+      console.log(value)
       return JSON.parse(value.toString())
     })
   }

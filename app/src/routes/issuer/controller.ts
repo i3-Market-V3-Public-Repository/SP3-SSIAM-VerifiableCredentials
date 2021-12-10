@@ -23,7 +23,80 @@ export default class IssuerController {
 
     // initialize issuer registry contract
     this.identity = await config.identityPromise;    
-    this.smartcontract = await config.issuerRegistryAbiPromise;
+    this.smartcontract = {
+      "abi": [
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "truster",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "issuer",
+            "type": "address"
+          }
+        ],
+        "name": "Trusted",
+        "type": "event"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_wallet",
+            "type": "address"
+          }
+        ],
+        "name": "addIssuer",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_wallet",
+            "type": "address"
+          }
+        ],
+        "name": "isTrusted",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_wallet",
+            "type": "address"
+          }
+        ],
+        "name": "removeIssuer",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ]
+  };
     Contract.setProvider(config.rpcUrl); 
     this.contractAddress = config.smartContractIssuers;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
