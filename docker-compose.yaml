@@ -6,6 +6,8 @@ services:
     image: i3market/verifiable-credentials
     container_name: vc-service-prod
     restart: unless-stopped
+    ports:
+      - 4200:4200
     env_file:
       - production.env
     networks:
