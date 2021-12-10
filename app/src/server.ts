@@ -12,11 +12,8 @@ import { jwks, did } from './security'
 import { apiSpecEndpoint, credentialEndpoint, didEndpoint, issuerEndpoint, presentationEndpoint } from './routes'
 /// ///////
 
-async function listenPromise (server: http.Server, port: any): Promise<void> {
-  
-  if(port === NaN) {
-    port = 4000
-  }
+async function listenPromise (server: http.Server, port: Number): Promise<void> {
+
   return await new Promise((resolve) => server.listen(port, () => {
     resolve()
   }))
@@ -33,7 +30,7 @@ export async function main (): Promise<void> {
 
   let port = config.port
   if(config.port === NaN) {
-    port = 4000
+    port = 4200
   }
 
   // Connect to ngrok
