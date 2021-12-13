@@ -44,8 +44,8 @@ paths:
 
   /release2/vc/credential/issue/{credential}/callbackUrl/{callbackUrl}:    
     get:
-      summary: Create a new credential with Veramo framework
-      description: Create a new credential with Veramo framework
+      summary: Create a new credential with Veramo framework and store it in the wallet (full flow)
+      description: Create a new credential with Veramo framework it in the wallet (full flow)
       tags:
         - Credential 
       parameters:           
@@ -71,6 +71,41 @@ paths:
               schema: {
                 type: string
               }
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "./schema/error.yaml#/Error"
+
+  /release2/vc/credential/issue/{did}/{credential}:    
+    get:
+      summary: Generate a new credential with Veramo framework for a specific did
+      description: Create a new credential with Veramo framework for a specific did
+      tags:
+        - Credential 
+      parameters:     
+        - name: did
+          in: path
+          description: did user for which to create the verifiable credential
+          required: true
+          schema: {
+            type: string
+          }      
+        - name: credential
+          in: path
+          description: the credential JSON in encoded way
+          required: true
+          schema: {
+            type: string
+          }                               
+      responses:
+        200:
+          description: W3C credential in string format
+          content: 
+            application/json:
+              schema: 
+                type: object
         default:
           description: unexpected error
           content:
