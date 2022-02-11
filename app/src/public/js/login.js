@@ -1,72 +1,85 @@
+/// <reference path="global.d.ts" />
+
 (async function () {
-  const protocol = location.protocol === 'http' ? 'ws' : 'wss'
-  const webSocketURL = protocol + '://' + location.host + location.pathname + '/socket'
-  const initialTries = 20
-  const reconnectInterval = 500
-  const keepAliveInterval = 10000
 
-  let tries = initialTries
-  let reconnect = true
-  let intervalId
+  const main = async () => {
 
-  connectWebSocket()
+    const MAP = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+    const base58 = {
+        encode: function(B,A){var d=[],s="",i,j,c,n;for(i in B){j=0,c=B[i];s+=c||s.length^i?"":1;while(j in d||c){n=d[j];n=n?n*256+c:c;c=n/58|0;d[j]=n%58;j++}}while(j--)s+=A[d[j]];return s},
+        decode: function(S,A){var d=[],b=[],i,j,c,n;for(i in S){j=0,c=A.indexOf(S[i]);if(c<0)return undefined;c||b.length^i?i:b.push(0);while(j in d||c){n=d[j];n=n?n*58+c:c;c=n>>8;d[j]=n%256;j++}}while(j--)b.push(d[j]);return new Uint8Array(b)}
+    }
 
-  /**
-   * When a code is received by the websocket, send the code to the login endpoint
-   */
-  async function onCodeReceived (ev) {
-    console.log('Received a message in the socket', ev.data)
-    reconnect = false
+    const sessionState = document.getElementById('session-state')
 
-    // Create an invisible form and submit it
-    const form = document.createElement('form')
-    form.setAttribute('action', location.pathname + '/login')
-    form.setAttribute('method', 'POST')
-    form.style.display = 'none'
+    const { WalletProtocol, HttpInitiatorTransport, Session } = walletProtocol
+    const { openModal, LocalSessionManager } = walletProtocolUtils
+    const { WalletApi } = walletProtocolApi
+    
+    const transport = new HttpInitiatorTransport({ getConnectionString: openModal })
+    const protocol = new WalletProtocol(transport)
+    const sessionManager = new LocalSessionManager(protocol)
 
-    const codeInput = document.createElement('input')
-    codeInput.setAttribute('name', 'code')
-    codeInput.value = ev.data
-    form.appendChild(codeInput)
 
-    document.body.appendChild(form)
+    sessionManager
+    .$session
+    .subscribe((session) => {
+        sessionState.innerText = session !== undefined ? 'ON' : 'OFF'
+        if(session !== undefined) {
+            console.log('enabling flow')  
+            const api = new WalletApi(session)     
+            
+            // Retrieve identity from the Wallet
+            api.identities.select().then(result => {
+              console.log(result)
+              let did = result.did        
+              console.log(did)
+              let encodedDid = encodeURIComponent(did);
+              let encodedCredential = encodeURIComponent(JSON.stringify(credential));
+              console.log(encodedCredential)
+          
+              // Call to VC service to create the Verifiable Credential
+              const response = new Promise(resolve => {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", '/release2/vc/credential/issue/' + did + '/' + credential, true);
+                xhr.onload = function(e) {
+                  resolve(xhr.response);
+                };
+                xhr.onerror = function () {
+                  resolve(undefined);
+                  console.error("** An error occurred during the XMLHttpRequest");
+                };
+                xhr.send();
+              }) 
+              response.then(result => {
+                let credential = JSON.parse(result)  
+                let credentialToPost = {}                                      
+                credentialToPost.resource = credential
+                credentialToPost.type = 'VerifiableCredential'
+                credentialToPost.identity = credential.credentialSubject.id
+                console.log(credentialToPost)
 
-    form.submit()
+                // Store the VC in the wallet
+                api.resources.create(credentialToPost).then(walletResponse => {
+                  console.log(walletResponse)
+                })
+
+              }).catch(err => { console.log(err) })
+              
+
+            
+            }).catch(err => { console.log(err) })
+
+        } else {
+            console.log('no session')
+            return
+        }
+        
+    })
+    
+    await sessionManager.loadSession()
+    await sessionManager.createIfNotExists()
   }
-
-  /**
-   * Connect the websocket to the specific interaction.
-   *
-   * - If the WebSocket is closed reconnect it.
-   * - Send keep alive messages periodically
-   */
-  function connectWebSocket () {
-    const ws = new WebSocket(webSocketURL)
-    if (intervalId) {
-      clearInterval(intervalId)
-      intervalId = undefined
-    }
-
-    ws.onmessage = onCodeReceived
-
-    ws.onopen = () => {
-      console.log('Socket sucessfuly connected')
-      tries = initialTries
-      intervalId = setInterval(() => {
-        ws.send('@keepalive@')
-      }, keepAliveInterval)
-    }
-
-    ws.onclose = () => {
-      if (!reconnect) {
-        return
-      }
-
-      console.log(`Socket disconnected, tries remaining ${tries}`)
-      tries--
-      if (tries > 0) {
-        setTimeout(connectWebSocket, reconnectInterval)
-      }
-    }
-  }
+  window.onload = main
+  
 })()

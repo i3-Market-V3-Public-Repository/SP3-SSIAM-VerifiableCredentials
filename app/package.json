@@ -47,6 +47,9 @@
     "typescript": "^4.1.5"
   },
   "dependencies": {
+    "@i3m/wallet-protocol": "^1.0.1",
+    "@i3m/wallet-protocol-api": "^1.0.1",
+    "@i3m/wallet-protocol-utils": "^1.0.1",
     "@veramo/core": "^1.2.0",
     "@veramo/credential-w3c": "^1.2.0",
     "@veramo/data-store": "^1.2.0",
@@ -80,7 +83,7 @@
     "oidc-provider": "^6.29.5",
     "path-to-regexp": "^6.2.0",
     "sqlite3": "^5.0.2",
-    "swagger-ui-express": "^4.1.6",
+    "swagger-ui-express": "^4.3.0",
     "uport-credentials": "^1.3.5",
     "uport-transports": "^0.2.6",
     "web-did-resolver": "^2.0.4",
