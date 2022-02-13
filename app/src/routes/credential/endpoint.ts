@@ -1,6 +1,5 @@
 import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
 
-import { WebSocketRouter } from '../../ws'
 import { EndpointLoader } from '../../endpoint'
 import CredentialController from './controller'
 
@@ -18,11 +17,10 @@ const setNoCache: RequestHandler = (req, res, next) => {
 
 const body = urlencoded({ extended: false })
 
-const endpoint: EndpointLoader = async (app, wss) => {
+const endpoint: EndpointLoader = async (app) => {
   const appRouter = AppRouter()
   const basicRouter = AppRouter()
-  const wsRouter = WebSocketRouter()  
-  const controller = new CredentialController(wss)  
+  const controller = new CredentialController()  
 
   // Wait controller initialization
   await controller.initialize()
@@ -30,7 +28,7 @@ const endpoint: EndpointLoader = async (app, wss) => {
   // Handle view
   appRouter.use((req, res, next) => {
     const orig = res.render
-    // you'll probably want to use a full blown render engine capable of layouts
+    // MVC render engine with layouts
     res.render = (view, locals) => {
       app.render(view, locals, (err, html) => {
         if (err) throw err
@@ -42,25 +40,14 @@ const endpoint: EndpointLoader = async (app, wss) => {
     }
     next()
   })
-  
-
-  // uPort routes
-  appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
-  appRouter.post('/issue/:did', setNoCache, body, nextIfError(controller.addCredentialByDid)) 
 
   // Veramo routes
+  appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
   appRouter.get('/issue/:credential/callbackUrl/:callbackUrl', setNoCache, nextIfError(controller.addVeramoCredential)) 
   appRouter.get('/issue/:did/:credential', setNoCache, nextIfError(controller.addCredentialByDidAndCredentialString)) 
-
-  // To be implemented
   basicRouter.post('/revoke', setNoCache, body, nextIfError(controller.revokeCredentialByJWT))
   basicRouter.post('/verify', setNoCache, body, nextIfError(controller.verifyCredentialByJWT))
-
-  // Setup ws routes
-  wsRouter.connect('/did/:uid/socket', controller.socketConnect)
-  wsRouter.message('/did/:uid/socket', controller.socketMessage)
-  wsRouter.close('/did/:uid/socket', controller.socketClose)
   
-  return { appRouter, wsRouter, basicRouter }
+  return { appRouter, basicRouter }
 }
 export default endpoint

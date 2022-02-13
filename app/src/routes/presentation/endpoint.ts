@@ -1,6 +1,5 @@
 import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
 
-import { WebSocketRouter } from '../../ws'
 import { EndpointLoader } from '../../endpoint'
 import PresentationController from './controller'
 
@@ -18,11 +17,10 @@ const setNoCache: RequestHandler = (req, res, next) => {
 
 const body = urlencoded({ extended: false })
 
-const endpoint: EndpointLoader = async (app, wss) => {
+const endpoint: EndpointLoader = async (app) => {
   const appRouter = AppRouter()
-  const basicRouter = AppRouter()
-  const wsRouter = WebSocketRouter()  
-  const controller = new PresentationController(wss)  
+  const basicRouter = AppRouter()  
+  const controller = new PresentationController()  
 
   // Wait controller initialization
   await controller.initialize()
@@ -48,12 +46,6 @@ const endpoint: EndpointLoader = async (app, wss) => {
   appRouter.post('/verify', setNoCache, body, nextIfError(controller.verifyPresentation)) 
 
 
-
-  // Setup ws routes
-  wsRouter.connect('/did/:uid/socket', controller.socketConnect)
-  wsRouter.message('/did/:uid/socket', controller.socketMessage)
-  wsRouter.close('/did/:uid/socket', controller.socketClose)
-  
-  return { appRouter, wsRouter, basicRouter }
+  return { appRouter, basicRouter }
 }
 export default endpoint

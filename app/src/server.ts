@@ -6,11 +6,9 @@ import { URL } from 'url'
 import config from './config'
 import logger, { loggerMiddleware } from './logger'
 import { addEndpoint } from './endpoint'
-import WebSocketServer from './ws'
 import { jwks, did } from './security'
 
-import { apiSpecEndpoint, credentialEndpoint, didEndpoint, issuerEndpoint, presentationEndpoint } from './routes'
-/// ///////
+import { apiSpecEndpoint, credentialEndpoint, issuerEndpoint, presentationEndpoint } from './routes'
 
 async function listenPromise (server: http.Server, port: Number): Promise<void> {
 
@@ -57,7 +55,6 @@ export async function main (): Promise<void> {
   // Initialize express
   const app = express()
   const server = http.createServer(app)
-  const wss = new WebSocketServer(server)
 
   // View
   app.set('views', path.join(__dirname, 'views'))
@@ -84,11 +81,10 @@ export async function main (): Promise<void> {
   }
 
   // Add endpoints
-  addEndpoint(app, wss, `${config.getContextPath}/api-spec`, await apiSpecEndpoint(app, wss))
-  addEndpoint(app, wss, `${config.getContextPath}/credential`, await credentialEndpoint(app, wss))
-  addEndpoint(app, wss, `${config.getContextPath}/did`, await didEndpoint(app, wss))
-  addEndpoint(app, wss, `${config.getContextPath}/issuer`, await issuerEndpoint(app, wss))
-  addEndpoint(app, wss, `${config.getContextPath}/presentation`, await presentationEndpoint(app, wss))
+  addEndpoint(app, `${config.getContextPath}/api-spec`, await apiSpecEndpoint(app))
+  addEndpoint(app, `${config.getContextPath}/credential`, await credentialEndpoint(app))
+  addEndpoint(app, `${config.getContextPath}/issuer`, await issuerEndpoint(app))
+  addEndpoint(app, `${config.getContextPath}/presentation`, await presentationEndpoint(app))
 
   // Add static files (css and js)
   const publicDir = path.resolve(__dirname, 'public')
