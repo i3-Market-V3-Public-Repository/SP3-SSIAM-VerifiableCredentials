@@ -1,14 +1,12 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { promisify } from 'util'
-import { Credentials } from 'uport-credentials'
 import { randomFillSync } from 'crypto'
 
-type Identity = ReturnType<typeof Credentials.createIdentity>
+type Identity = ReturnType<any>
 type ConvertFunction<T> = (value: string) => T
 
 const readFilePromise = promisify(fs.readFile)
-// type Identity = ReturnType<Credentials>
 
 function generateRandomStrings (byteLength = 32, amount = 1): string[] {
   const randoms: string[] = []
@@ -28,9 +26,11 @@ class Config {
     this.defaults = {
       NODE_ENV: 'development',
 
-      SERVER_PUBLIC_URI: 'http://localhost:4000',
+      SERVER_PUBLIC_URI: 'http://localhost:4200',
       HOST_PORT: '4200',
       SERVER_PORT: '4200',
+
+      BACKPLANE_CONTEXT_PATH: '/release2/vc',
 
       REVERSE_PROXY: '0',
       USE_NGROK: '0',
@@ -118,7 +118,6 @@ class Config {
     * @property Server port
     */
   get port (): number {
-    console.log(this.get('SERVER_PORT', this.fromInteger), typeof this.get('SERVER_PORT', this.fromInteger))
     return this.get('SERVER_PORT', this.fromInteger)
   } 
 
@@ -135,6 +134,13 @@ class Config {
    get getContextPath (): string {
     return this.get('CONTEXT_PATH')
   }
+
+  /**
+   * @property Context path of the backplane, to redirect the callbacks
+   */
+     get getBackplaneContextPath (): string {
+      return this.get('BACKPLANE_CONTEXT_PATH')
+    }
 
   /**
    * @property Keys used by the OIDC to sign the cookies
@@ -185,11 +191,7 @@ class Config {
    * @property Get smart contract revocation registry promise. 
    */
    get smartcontractAbiPromise (): Promise<any> {
-    console.log('get smartcontractAbiPromise')
-    console.log('this.get(\'CONTRACT_ABI\')', this.get('CONTRACT_ABI'))
-    return readFilePromise(this.get('CONTRACT_ABI')).then((value) => {
-      console.log('value')
-      console.log(value)
+    return readFilePromise(this.get('CONTRACT_ABI')).then((value) => {      
       return JSON.parse(value.toString())
     })
   }

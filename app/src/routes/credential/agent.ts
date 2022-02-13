@@ -41,8 +41,6 @@ const dbConnection = createConnection({
   logging: ['error', 'info', 'warn'],
   entities: Entities,
 })
-
-// Veramo config
  
 const RINKEBY_PROVIDER_DATA = {
   defaultKms: 'local',

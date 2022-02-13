@@ -1,46 +1,20 @@
 import { RequestHandler } from 'express'
-//import { Credentials, SimpleSigner } from 'uport-credentials'
-//import { getResolver } from 'ethr-did-resolver'
-//import { Resolver } from 'did-resolver'
-// import { decodeJWT } from "did-jwt"
 
 import logger from '../../logger'
 import config from '../../config'
-import { SocketHandler } from '../../ws/utils'
-import WebSocketServer from '../../ws'
 
 import { agent } from './agent'
-// const transports = require('uport-transports').transport
-// const message = require('uport-transports').message.util
-
-// import { EthrDID } from 'ethr-did'
 import { Issuer } from 'did-jwt-vc'
-import { JwtCredentialPayload, createVerifiableCredentialJwt } from 'did-jwt-vc'
 import { IIdentifier } from '@veramo/core'
 
 import { ethers } from 'ethers'
 import { decodeJWT } from 'did-jwt'
 
-// import { EthrCredentialRevoker } from 'ethr-status-registry'
-// import { sign } from 'ethjs-signer'
-// const didJWT = require('did-jwt')
-
 const web3 = require("web3");
 var Contract = require('web3-eth-contract');
 
-
-
-interface SocketParams {
-  uid: string
-}
-
-interface SocketData {
-  hello: string
-}
-
 export default class CredentialController {
 
-  //protected credentials: Credentials
   protected issuer: Issuer;
   protected smartcontract: any;
   protected smartcontractIssuer: any;
@@ -52,7 +26,7 @@ export default class CredentialController {
   protected veramoIdentity: IIdentifier;
   protected provider: ethers.providers.JsonRpcProvider;
 
-  constructor (protected wss: WebSocketServer) { }
+  constructor () { }
 
   public async initialize () {
     
@@ -236,35 +210,18 @@ export default class CredentialController {
     
   }
 
-  // WebSocket Methods
-  socketConnect: SocketHandler<SocketParams> = async (socket, req) => {  
-    console.log('socket connect')  
-    console.log(req.params)
-    socket.tag(req.params.uid)
-  }
-
-  socketMessage: SocketHandler<SocketParams, SocketData> = async (socket, req) => {
-    logger.debug('Message socket')
-    const json = req.json()
-    console.log(json.hello)
-  }
-
-  socketClose: SocketHandler<SocketParams> = async () => {
-    logger.debug('Close socket')
-  }
-
   /**
    * Veramo
    * 
-   * GET /credential/issue/{credential} - render the HTML page that will communicate with the i3market wallet
+   * GET /credential/issue/{credential}/callbackUrl/{callbackUrl} - render the HTML page that will communicate with the i3market wallet
    */
    addVeramoCredential: RequestHandler = async (req, res, next) => {    
-    return res.render('create_veramo_credential', {
+    return res.render('issue_credential', {
       title: '', 
       credential: req.params.credential,
-      callbackUrl: req.params.callbackUrl
+      callbackUrl: req.params.callbackUrl,
+      backplaneContextPath: config.getBackplaneContextPath
     });
-
   }
 
   /**
@@ -291,7 +248,6 @@ export default class CredentialController {
 
     // console.log(credential)
     res.send(credential)
-  
   }
 
   /**   
@@ -443,25 +399,5 @@ export default class CredentialController {
     res.send(['to be implemented asap'])
   }
 
-  /**
-   * uPort flow - deprecated
-   * 
-   * POST /credential/issue/{did} - create a new credential
-   */
-   addCredentialByDid: RequestHandler = async (req, res, next) => {
-
-    const vcPayload: JwtCredentialPayload = {
-      sub: req.params.did,
-      nbf: Math.floor(new Date().getTime() / 1000),
-      vc: {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        type: ['VerifiableCredential'],
-        credentialSubject: req.body
-      }
-    }
-    
-    const vcJwt = await createVerifiableCredentialJwt(vcPayload, this.issuer)    
-    res.send(vcJwt)
-  }
 
 }
