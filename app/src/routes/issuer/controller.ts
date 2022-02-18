@@ -7,7 +7,6 @@ import logger from '../../logger'
 
 const web3 = require("web3");
 var Contract = require('web3-eth-contract');
-
 export default class IssuerController {
 
   protected smartcontract: any;
@@ -128,6 +127,7 @@ export default class IssuerController {
       })
     }
   }
+  
 
   /**
   * Subscribe a new issuer
@@ -154,6 +154,10 @@ export default class IssuerController {
       })
 
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
+
+      logger.debug('transactionResponse')
+      logger.debug(JSON.stringify(transactionResponse))
+
       const receipt = await transactionResponse.wait();
 
       logger.debug('receipt')
@@ -206,6 +210,10 @@ export default class IssuerController {
       })
 
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
+
+      logger.debug('transactionResponse')
+      logger.debug(JSON.stringify(transactionResponse))
+
       const receipt = await transactionResponse.wait();
 
       logger.debug('receipt')
