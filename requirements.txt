@@ -1,0 +1,2 @@
+WALLET_APP = 1.0.0
+BESU = X.X.X
