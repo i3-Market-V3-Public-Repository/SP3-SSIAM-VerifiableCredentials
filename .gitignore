@@ -16,3 +16,5 @@ app/src/routes/api-spec/api.json
 .vscode/
 
 app/dist/
+
+ganache-volumes/

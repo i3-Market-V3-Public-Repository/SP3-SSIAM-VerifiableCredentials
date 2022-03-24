@@ -1,11 +1,11 @@
 import * as express from 'express'
 import { middleware as openapiValidator } from 'express-openapi-validator'
-import * as swaggerUI from 'swagger-ui-express'
+import swaggerUI from 'swagger-ui-express'
 
 import { EndpointLoader } from '../../endpoint'
 import config from '../../config'
 
-import * as openapiSpec from './api.json'
+import openapiSpec from './api.json'
 import { errorMiddleware } from './error-middleware'
 
 const endpoint: EndpointLoader = async (app) => {

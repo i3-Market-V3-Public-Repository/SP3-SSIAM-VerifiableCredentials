@@ -1,0 +1,257 @@
+{
+  "openapi": "3.0.3",
+  "servers": [
+    {
+      "url": "https://identity1.i3-market.eu/release2/vc"
+    }
+  ],
+  "info": {
+    "description": "The API of the i3Market Verifiable Credential service.",
+    "version": "1.0.0",
+    "title": "i3-market Verifiable Credential service API",
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "contact": {
+      "name": "Rupert Gobber",
+      "email": "rupert.gobber@gft.com"
+    }
+  },
+  "tags": [
+    {
+      "name": "DID",
+      "description": "DID endpoint"
+    },
+    {
+      "name": "Credential",
+      "description": "Credential endpoint"
+    },
+    {
+      "name": "Presentation",
+      "description": "Presentation endpoint"
+    },
+    {
+      "name": "Issuer",
+      "description": "Issuer endpoint"
+    }
+  ],
+  "paths": {
+    "/release2/vc/credential": {
+      "get": {
+        "summary": "Get the credential list",
+        "description": "Get the credential list",
+        "tags": [
+          "Credential"
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential list"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Error",
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/release2/vc/credential/issue/{credential}": {
+      "get": {
+        "summary": "Create a new credential with Veramo framework",
+        "description": "Create a new credential with Veramo framework",
+        "tags": [
+          "Credential"
+        ],
+        "parameters": [
+          {
+            "name": "credential",
+            "in": "path",
+            "description": "the credential JSON in encoded way",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credential list"
+          },
+          "default": {
+            "description": "unexpected error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/paths/~1release2~1vc~1credential/get/responses/default/content/application~1json/schema"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    
+    "/release2/vc/credential/revoke": {
+      "post": {
+        "summary": "Revoke a credential by JWT",
+        "tags": [
+          "Credential"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "credentialJwt": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Revoke operation status"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/release2/vc/credential/verify": {
+      "post": {
+        "summary": "Verify a credential by JWT",
+        "tags": [
+          "Credential"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "credentialJwt": {
+                    "type": "string"
+                  },
+                  "credentialIssuer": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verify operation status"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/release2/vc/presentation/verify": {
+      "post": {
+        "summary": "Verify a verifiable presentation by JWT. Used by OIDC authorization server during the authorization code flow",
+        "tags": [
+          "Presentation"
+        ],       
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "presentationJwt": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verify operation status"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/release2/vc/issuer/subscribe": {
+      "get": {
+        "summary": "Subscribe this issuer in the i3market trusted issuers list",
+        "tags": [
+          "Issuer"
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscribe operation successful"
+          },
+          "500": {
+            "description": "Internal server rrror"
+          }
+        }
+      }
+    },
+    "/release2/vc/issuer/unsubscribe": {
+      "get": {
+        "summary": "Unsubscribe this issuer from the i3market trusted issuers list",
+        "tags": [
+          "Issuer"
+        ],
+        "responses": {
+          "200": {
+            "description": "Unsubscribe operation successful"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/release2/vc/issuer/verify": {
+      "get": {
+        "summary": "Verify the subscription status of the issuer",
+        "tags": [
+          "Issuer"
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration status of the issuer"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  }
+}

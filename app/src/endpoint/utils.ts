@@ -7,8 +7,7 @@ interface ExpressCanUse {
 }
 
 export function addEndpoint (
-  app: ExpressCanUse,
-  wss: any,
+  app: ExpressCanUse,  
   path: string,
   endpoint: Endpoint
 ) {
@@ -20,7 +19,4 @@ export function addEndpoint (
     app.use(path, endpoint.basicRouter)
   }
 
-  if (endpoint.wsRouter) {
-    wss.use(path, endpoint.wsRouter)
-  }
 }

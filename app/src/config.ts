@@ -1,14 +1,12 @@
 import * as fs from 'fs'
 import * as path from 'path'
 import { promisify } from 'util'
-import { Credentials } from 'uport-credentials'
 import { randomFillSync } from 'crypto'
 
-type Identity = ReturnType<typeof Credentials.createIdentity>
+type Identity = ReturnType<any>
 type ConvertFunction<T> = (value: string) => T
 
 const readFilePromise = promisify(fs.readFile)
-// type Identity = ReturnType<Credentials>
 
 function generateRandomStrings (byteLength = 32, amount = 1): string[] {
   const randoms: string[] = []
@@ -24,27 +22,36 @@ class Config {
   protected _host?: string
 
   constructor () {
-    const defaultPort = '3000'
 
     this.defaults = {
       NODE_ENV: 'development',
 
-      SERVER_PUBLIC_URI: 'http://localhost:3000',
-      HOST_PORT: defaultPort,
+      SERVER_PUBLIC_URI: 'http://localhost:4200',
+      HOST_PORT: '4200',
+      SERVER_PORT: '4200',
 
-      REVER_PROXY: '0',
+      BACKPLANE_CONTEXT_PATH: '/release2/vc',
+
+      REVERSE_PROXY: '0',
       USE_NGROK: '0',
       USE_LOCALHOST_RUN: '0',
 
-      OIDC_PROVIDER_ISSUER: undefined,
-      OIDC_PROVIDER_DB_HOST: 'localhost',
-      OIDC_PROVIDER_DB_PORT: '27017',
+      VC_ISSUER: undefined,
+      VC_DB_HOST: 'localhost',
+      VC_DB_PORT: '27017',
 
       COOKIES_KEYS: generateRandomStrings(32, 3).join(','),
       JWKS_KEYS_PATH: './misc/jwks.json',
       IDENTITY_PATH: './misc/identity.json',
+      CONTEXT_PATH: '/release2/vc',
 
-      RPC_URL: 'https://rinkeby.infura.io/ethr-did',
+      CONTRACT_ABI: './misc/credential-registry.json',
+      REGISTRY_CONTRACT: '0x43978149D2ae5805a590DB162412aaDfb3f2336e',
+
+      ISSUER_REGISTRY_ABI: './misc/issuer-registry.json',
+      ISSUER_REGISTRY_CONTRACT: '0x7E99D17acECB41aB2131acB26c95A8f90af0d10f',
+
+      RPC_URL: 'http://95.211.3.250:8545',
       WHITELIST: './misc/whitelist.js'
     }
   }
@@ -111,15 +118,8 @@ class Config {
     * @property Server port
     */
   get port (): number {
-    return 4000
-  }
-
-  /**
-   * @property Host port
-   */
-  get hostPort (): number {
-    return this.get('HOST_PORT', this.fromInteger)
-  }
+    return this.get('SERVER_PORT', this.fromInteger)
+  } 
 
   /**
    * @property Reverse proxy
@@ -136,16 +136,11 @@ class Config {
   }
 
   /**
-   * @property Mongo connection URI
+   * @property Context path of the backplane, to redirect the callbacks
    */
-  get mongoUri (): string {
-    return [
-      'mongodb://',
-            `${this.get('OIDC_PROVIDER_DB_USERNAME')}:${this.get('OIDC_PROVIDER_DB_PASSWORD')}@`,
-            `${this.get('OIDC_PROVIDER_DB_HOST')}:${this.get('OIDC_PROVIDER_DB_PORT')}/`,
-            `${this.get('OIDC_PROVIDER_DB_DATABASE')}?authSource=admin`
-    ].join('')
-  }
+     get getBackplaneContextPath (): string {
+      return this.get('BACKPLANE_CONTEXT_PATH')
+    }
 
   /**
    * @property Keys used by the OIDC to sign the cookies
@@ -157,7 +152,7 @@ class Config {
   /**
    * @property Path for the jwks keys used by the OIDC
    */
-  get jwksKeysPath (): string {
+  get jwksKeysPath (): fs.PathLike {
     return this.get('JWKS_KEYS_PATH')
   }
 
@@ -178,11 +173,38 @@ class Config {
   /**
    * @property Get identity promise. This identity contains a DID and its associated privateKey
    */
+  /*
+   get smartcontractAbi (): fs.PathLike {
+    return this.get('CONTRACT_ABI')
+  }*/
+
+  /**
+   * @property Get identity promise. This identity contains a DID and its associated privateKey
+   */
   get identityPromise (): Promise<Identity> {
     return readFilePromise(this.get('IDENTITY_PATH')).then((value) => {
       return JSON.parse(value.toString())
     })
   }
+
+  /**
+   * @property Get smart contract revocation registry promise. 
+   */
+   get smartcontractAbiPromise (): Promise<any> {
+    return readFilePromise(this.get('CONTRACT_ABI')).then((value) => {      
+      return JSON.parse(value.toString())
+    })
+  }
+
+  /**
+   * @property Get smart contract registry for issuers promise. 
+   */
+   get issuerRegistryAbiPromise (): Promise<Identity> {
+    return readFilePromise(this.get('ISSUER_REGISTRY_ABI')).then((value) => {
+      return JSON.parse(value.toString())
+    })
+  }
+  
 
   /**
    * @property Get the RPC URL
@@ -196,6 +218,20 @@ class Config {
    */
   get whitelist (): string[] {
     return this.get<string[]>('WHITELIST', this.fromImport)
+  }
+
+  /**
+   * @property The endpoint of the smart contract registry for credentials revocation 
+   */
+   get smartContractRegistry (): string {
+    return this.get('REGISTRY_CONTRACT');
+  }
+
+  /**
+   * @property The endpoint of the smart contract registry for issuer
+   */
+  get smartContractIssuers (): string {
+    return this.get('ISSUER_REGISTRY_CONTRACT');
   }
 
   /**
@@ -224,6 +260,18 @@ class Config {
       throw new Error('Host not initialized yet')
     }
     return this._host
+  }
+
+  /**
+   * @property Mongo connection URI
+   */
+   get mongoUri (): string {
+    return [
+      'mongodb://',
+            `${this.get('VC_DB_USERNAME')}:${this.get('VC_DB_PASSWORD')}@`,
+            `${this.get('VC_DB_HOST')}:${this.get('VC_DB_PORT')}/`,
+            `${this.get('VC_DB_DATABASE')}?authSource=admin`
+    ].join('')
   }
 }
 
