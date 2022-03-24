@@ -1,7 +1,7 @@
 import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
 
 import { EndpointLoader } from '../../endpoint'
-import CredentialController from './controller'
+import PresentationController from './controller'
 
 function nextIfError (handler: RequestHandler): RequestHandler {
   return async (req, res, next) => {
@@ -19,8 +19,8 @@ const body = urlencoded({ extended: false })
 
 const endpoint: EndpointLoader = async (app) => {
   const appRouter = AppRouter()
-  const basicRouter = AppRouter()
-  const controller = new CredentialController()  
+  const basicRouter = AppRouter()  
+  const controller = new PresentationController()  
 
   // Wait controller initialization
   await controller.initialize()
@@ -28,7 +28,7 @@ const endpoint: EndpointLoader = async (app) => {
   // Handle view
   appRouter.use((req, res, next) => {
     const orig = res.render
-    // MVC render engine with layouts
+    // you'll probably want to use a full blown render engine capable of layouts
     res.render = (view, locals) => {
       app.render(view, locals, (err, html) => {
         if (err) throw err
@@ -40,14 +40,12 @@ const endpoint: EndpointLoader = async (app) => {
     }
     next()
   })
+  
 
   // Veramo routes
-  appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
-  appRouter.get('/issue/:credential/callbackUrl/:callbackUrl', setNoCache, nextIfError(controller.addVeramoCredential)) 
-  appRouter.get('/issue/:did/:credential', setNoCache, nextIfError(controller.addCredentialByDidAndCredentialString)) 
-  basicRouter.post('/revoke', setNoCache, body, nextIfError(controller.revokeCredentialByJWT))
-  basicRouter.post('/verify', setNoCache, body, nextIfError(controller.verifyCredentialByJWT))
-  
+  appRouter.post('/verify', setNoCache, body, nextIfError(controller.verifyPresentation)) 
+
+
   return { appRouter, basicRouter }
 }
 export default endpoint

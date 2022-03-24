@@ -1,98 +1,253 @@
 import { RequestHandler } from 'express'
-import { Credentials, SimpleSigner } from 'uport-credentials'
-import { getResolver } from 'ethr-did-resolver'
-import { Resolver } from 'did-resolver'
-// import { decodeJWT } from "did-jwt"
 
 import logger from '../../logger'
 import config from '../../config'
-import { SocketHandler } from '../../ws/utils'
-import WebSocketServer from '../../ws'
 
-const transports = require('uport-transports').transport
-const message = require('uport-transports').message.util
+import { agent } from './agent'
+import { Issuer } from 'did-jwt-vc'
+import { IIdentifier } from '@veramo/core'
 
-// import { EthrCredentialRevoker } from 'ethr-status-registry'
-// import { sign } from 'ethjs-signer'
-// const didJWT = require('did-jwt')
+import { ethers } from 'ethers'
+import { decodeJWT } from 'did-jwt'
 
-interface SocketParams {
-  uid: string
-}
+const web3 = require("web3");
+var Contract = require('web3-eth-contract');
 
-interface SocketData {
-  hello: string
-}
+export default class CredentialController {
 
-export default class InteractionController {
+  protected issuer: Issuer;
+  protected smartcontract: any;
+  protected smartcontractIssuer: any;
+  protected identity: any;
+  protected contractAddress: string;
+  protected contractAddressIssuer: string;
+  protected contract: any;
+  protected contractIssuer: any;
+  protected veramoIdentity: IIdentifier;
+  protected provider: ethers.providers.JsonRpcProvider;
 
-  protected credentials: Credentials
-
-  constructor (protected wss: WebSocketServer) { }
+  constructor () { }
 
   public async initialize () {
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }
-    const identity = await config.identityPromise
-    this.credentials = new Credentials({
-      did: identity.did,
-      signer: SimpleSigner(identity.privateKey),
-      resolver: new Resolver(getResolver(providerConfig))
-    })
-  }
-  
+    
+    // initialize credential registry contract
+    Contract.setProvider(config.rpcUrl); 
+    this.identity = await config.identityPromise;
+    this.smartcontract = {
+      "abi": [
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "issuer",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "bytes32",
+            "name": "digest",
+            "type": "bytes32"
+          }
+        ],
+        "name": "Revoked",
+        "type": "event"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "bytes32",
+            "name": "digest",
+            "type": "bytes32"
+          }
+        ],
+        "name": "revoke",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "issuer",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "digest",
+            "type": "bytes32"
+          }
+        ],
+        "name": "revoked",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+    };       
+    
+    this.contractAddress = config.smartContractRegistry;
+    this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
+    this.smartcontractIssuer = {
+      "abi": [
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "truster",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "internalType": "address",
+            "name": "issuer",
+            "type": "address"
+          }
+        ],
+        "name": "Trusted",
+        "type": "event"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_wallet",
+            "type": "address"
+          }
+        ],
+        "name": "addIssuer",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_wallet",
+            "type": "address"
+          }
+        ],
+        "name": "isTrusted",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "internalType": "address",
+            "name": "_wallet",
+            "type": "address"
+          }
+        ],
+        "name": "removeIssuer",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ]
+    };    
+    this.contractAddressIssuer = config.smartContractIssuers;
+    this.contractIssuer = new Contract(this.smartcontractIssuer.abi, this.contractAddressIssuer);
 
-  // WebSocket Methods
-  socketConnect: SocketHandler<SocketParams> = async (socket, req) => {  
-    console.log('socket connect')  
-    console.log(req.params)
-    socket.tag(req.params.uid)
-  }
+    // initialize ethers js rpc
+    this.provider = new ethers.providers.JsonRpcProvider(config.rpcUrl);
 
-  socketMessage: SocketHandler<SocketParams, SocketData> = async (socket, req) => {
-    logger.debug('Message socket')
-    const json = req.json()
-    console.log(json.hello)
-  }
+    // initialize veramo identity
+    try {
+      this.veramoIdentity = await agent.didManagerGetByAlias({
+        alias: 'VCservice',
+        provider: 'did:ethr:i3m'
+      })  
+    } catch (error) {
+      logger.error(error)
+      logger.debug('Identity not found in the Veramo database. Creating a new Veramo identity from identity.json ...')
 
-  socketClose: SocketHandler<SocketParams> = async () => {
-    logger.debug('Close socket')
-  }
+      this.veramoIdentity = await agent.didManagerImport({
+        did: `did:ethr:i3m:${this.identity.did}`,
+        keys: [{
+          type: 'Secp256k1',
+          kid: this.identity.did.substring(2),
+          publicKeyHex: this.identity.did.substring(2),
+          privateKeyHex: this.identity.privateKey.substring(2),
+          kms: 'local'
+        }],
+        controllerKeyId: this.identity.did.substring(2),
+        provider: 'did:ethr:i3m',
+        alias: 'VCservice',
+        services: []
+      })
 
+      logger.debug('New identity created')
+    }
+    
+  }
 
   /**
-   * POST /credential/issue/{did} - create a new credential  
+   * Veramo
+   * 
+   * GET /credential/issue/{credential}/callbackUrl/{callbackUrl} - render the HTML page that will communicate with the i3market wallet
    */
-  addCredentialByDid: RequestHandler = async (req, res, next) => {
+   addVeramoCredential: RequestHandler = async (req, res, next) => {    
+    return res.render('issue_credential', {
+      title: '', 
+      credential: req.params.credential,
+      callbackUrl: req.params.callbackUrl,
+      backplaneContextPath: config.getBackplaneContextPath
+    });
+  }
 
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }   
-    const identity = await config.identityPromise        
-    const credentials = new Credentials({      
-      did: identity.did, 
-      signer: SimpleSigner(identity.privateKey), 
-      resolver: new Resolver(getResolver(providerConfig))
+  /**
+   * Veramo
+   * 
+   * GET /credential/{did}/{credential} - callback to create credential using Veramo framework
+   */
+  addCredentialByDidAndCredentialString: RequestHandler = async (req, res, next) => {
+    let credentialPayload = JSON.parse(req.params.credential)
+    credentialPayload.id = req.params.did
+
+    const credential = await agent.createVerifiableCredential({
+      credential: {
+        issuer: { id: this.veramoIdentity.did },
+        credentialSubject: credentialPayload,
+        credentialStatus: {
+          id: config.rpcUrl, // rpc url of besu blockchain
+          type: config.smartContractRegistry // address of credential revocation registry
+        }
+      },
+      proofFormat: 'jwt',
+      save: false
     })
-    
-    credentials.createVerification({
-      sub: req.params.did,
-      exp: Math.floor(new Date().getTime() / 1000) + 30 * 24 * 60 * 60,
-      //TODO: discutere differenza tra exp del token e della credenziale
-      // il token dovrebbe essere accettato in 5 minuti ad esempio , la credenziale ha durata diversa dal token
-      
-      claim: req.body // prima era così: { [req.params.credentialType] : true },
-            
-    }).then(attestation => {
-      
-      logger.debug(`\nEncoded JWT sent to user: ${attestation}\n`)
-      const uri = message.paramsToQueryString(message.messageToURI(attestation), {callback_type: 'post'})
-      logger.debug(`\nUri: ${uri}\n`)
-      const qr =  transports.ui.getImageDataURI(uri)
-      logger.debug(qr)
-      //const title = 'Scan to add the ' + 'req.params.credentialType' + ' credential';
-      //return res.render('create_credential', { qr, title })
-      res.send(qr)
 
-    }).catch(e => { console.log(e) })
-    
+    // console.log(credential)
+    res.send(credential)
   }
 
   /**   
@@ -101,165 +256,148 @@ export default class InteractionController {
    */      
   revokeCredentialByJWT: RequestHandler = async (req, res, next) => {
 
-    console.log('req.body')
-    console.log(req.body)
-    res.send(req.body)
-/*
-    const identity = await config.identityPromise;    
-    const privateKey = '0x' + identity.privateKey // '0x<Issuer Private Key>'
-    const ethSigner = (rawTx: any, cb: any) => cb(null, sign(rawTx, privateKey))
+    let decodedJWT;
+    let credentialIssuer;
 
-    // const credential = '<JWT token with credentialStatus>' //TODO: prenderlo dal body    
-    // FIXME: su questo manca il credential status
-    const credential = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJpYXQiOjE1ODg5MjIyMDEsImNyZWRlbnRpYWxTdGF0dXMiOnsidHlwZSI6IkV0aHJTdGF0dXNSZWdpc3RyeTIwMTkiLCJpZCI6InJpbmtlYnk6MHg5N2ZkMjc4OTJjZGNEMDM1ZEFlMWZlNzEyMzVjNjM2MDQ0QjU5MzQ4In0sImlzcyI6ImRpZDpldGhyOjB4NTRkNTllM2ZmZDc2OTE3ZjYyZGI3MDJhYzM1NGIxN2YzODQyOTU1ZSJ9.0sLZupOnyrdZPQAhtfa2eP_2HN_FELJu_clbXBrk9SgaU_ZO0izjDLTnNkip9RVM6ED0nLznfT35XHk6_C9S_Q' 
+    // check if the credential passed in input is actually a W3C verifiable credential      
+    try {
 
-    const revoker = new EthrCredentialRevoker({ infuraProjectId: 'https://rinkeby.infura.io/ethr-did' }) //TODO: metto il mio progetto
-    const txHash = await revoker.revoke(credential, ethSigner)
-    console.log('txHash')
-    console.log(txHash)*/   
+      decodedJWT = decodeJWT(req.body.credentialJwt)
+
+      // remove blockchain prefix from address (e.g. did:ethr:rinkeby:) to extract the issuer address
+      const index = decodedJWT.payload.iss.indexOf("0x")   
+      credentialIssuer = decodedJWT.payload.iss.substring(index)
+      console.log(credentialIssuer)      
+
+    } catch (error) {
+
+      res.status(500).send({ 
+        error: 'error: invalid verifiable credential', 
+        log: 'The jwt passed in input does not represent a W3C verifiable credential'
+      })
+    }     
+
+    try {
+
+      // Generate the digest from the JWT of the credential
+      const digest = web3.utils.sha3(req.body.credentialJwt).toString('hex')
+      
+      const fromAddress = `0x${this.veramoIdentity.controllerKeyId}`
+      const nonce = await this.provider.getTransactionCount(fromAddress)
+
+      const txData = {        
+        nonce,
+        gasLimit: web3.utils.toHex(2500000),
+        gasPrice: web3.utils.toHex(10e9), // 10 Gwei
+        to: this.contractAddress,
+        from: fromAddress,
+        data: this.contract.methods.revoke(digest).encodeABI()
+      }
+
+      const signedTransaction = await agent.keyManagerSignEthTX({
+        kid: this.veramoIdentity.controllerKeyId ?? '',
+        transaction: txData
+      })
+
+      const transactionResponse = await this.provider.sendTransaction(signedTransaction);
+      const receipt = await transactionResponse.wait();
+
+      // logger.debug('receipt')
+      // logger.debug(JSON.stringify(receipt))
+
+      res.send({
+        message: 'credential revoked successfully',
+        transactionHash: receipt.transactionHash,
+        blockNumber: receipt.blockNumber,
+        blockHash: receipt.blockHash,
+        cumulativeGasUsed: receipt.cumulativeGasUsed
+      })
+
+    } catch (error) {
+      logger.error(error)
+      res.status(500).send({ 
+        error: 'error: something went wrong while executing the transaction', 
+        log: error
+      })
+    }
+ 
   }
 
   /**
    * POST /credential/verify - nel body il JWT
    */
   verifyCredentialByJWT: RequestHandler = async (req, res, next) => {
+      
+    let decodedJWT;
+    let credentialIssuer;
 
-    console.log('req.body')
-    console.log(req.body)
-    res.send(req.body)
+    // check if the credential passed in input is actually a W3C verifiable credential      
+    try {
 
-    // TODO:
-    // - https://developer.uport.me/credentials/requestverification#request-verifications questo è per i ruoli nel login
-    // - https://github.com/decentralized-identity/did-jwt prima questo
-    // - https://github.com/uport-project/credential-status poi questo
-    // - poi aggiungere controllo se è stata revocata usando https://github.com/uport-project/credential-status
+      decodedJWT = decodeJWT(req.body.credentialJwt)
 
-    /*
-    console.log('claim to verify: ' + req.params.claim)    
+      // remove blockchain prefix from address (e.g. did:ethr:rinkeby:) to extract the issuer address
+      const index = decodedJWT.payload.iss.indexOf("0x")   
+      credentialIssuer = decodedJWT.payload.iss.substring(index)      
 
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' } // FIXME:    
-    const identity = await config.identityPromise
-    console.log('identity: ' + JSON.stringify(identity))
-    const credentials = new Credentials({      
-      did: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //did in input
-      //did: req.params.did, //did in input
-      signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'), //FIXME: qui che chiave ci va ? 
-      resolver: new Resolver(getResolver(providerConfig))
-    })
+    } catch (error) {
 
-    credentials.createDisclosureRequest({
-      verified: [req.params.claim],
-      callbackUrl: '/credential/verify/callback'
-    }).then(requestToken => {
+      res.status(500).send({ 
+        error: 'error: invalid verifiable credential', 
+        log: 'The jwt passed in input does not represent a W3C verifiable credential'
+      })
+    }     
 
-      console.log(didJWT.decodeJWT(requestToken))  //log request token to console
-      const uri = message.paramsToQueryString(message.messageToURI(requestToken), {callback_type: 'post'})
-      const qr =  transports.ui.getImageDataURI(uri)
-      console.log(qr)
-    })*/
+    // Generate the digest from the JWT of the credential
+    const digest = web3.utils.sha3(req.body.credentialJwt).toString('hex')
+
+    const revoker = req.body.credentialIssuer ?? credentialIssuer;    
+
+    try {
+      // Call the smart contract function 
+      let blockNumber = await this.contract.methods.revoked(revoker, digest).call()
+
+      if(blockNumber === '0') {
+        // credential valid, now check the if the credential issuer is valid, otherwise send an error (status 2)
+        let blockNumberIssuer = await this.contractIssuer.methods.isTrusted(credentialIssuer).call()
+        
+        if(blockNumberIssuer === '0') {        
+          res.send({ 
+            status: 2,
+            message: 'untrusted credential issuer' 
+          })
+        }
+
+        console.log(blockNumberIssuer)
+        res.send({ 
+          status: 0,
+          message: 'credential not revoked' 
+        })
+      } else {
+        res.send({ 
+          status: 1,
+          message: 'credential revoked', 
+          transactionNumber: blockNumber
+        })
+      }  
+
+    } catch (error) {
+
+      res.status(500).send({ 
+        error: 'error: something went wrong while executing the transaction', 
+        log: error
+      })
+
+    }
+ 
   }
 
   /**
    * Get the list of the credential
    */
   getCredentialList: RequestHandler = async (req, res, next) => {
-    res.send(['to be implemented :)'])
+    res.send(['to be implemented asap'])
   }
 
-  //FIXME: deprecated flows below !!!
-
-
-  /**
-   * GET /credential/{did} - nel body i dati della credential (da capire come fare)   
-   */
-  /*
-  addCredentialCallback: RequestHandler = async (req, res, next) => {
-
-    // TODO:  usare did-jtw anziche createVerification, metterci dentro il credentialStatus
-    // gestire creazione qr oppure invio del jwt ad url (passato in input)
-    // integrare wallet 
-    const jwt = req.body.access_token
-
-
-    if(!req.params.did) {
-      //TODO: se è null me lo estraggo dal jwt
-      console.log('req addCredentialByDid')
-      //console.log(req)
-    }
-
-    const providerConfig = { rpcUrl: 'https://rinkeby.infura.io/ethr-did' }   
-    const identity = await config.identityPromise        
-    const credentials = new Credentials({      
-      //did: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //questo va, ma ci deve andare l'application did 
-      did: identity.did, //application did
-      //signer: SimpleSigner('ef6a01d0d98ba08bd23ee8b0c650076c65d629560940de9935d0f46f00679e01'),
-      signer: SimpleSigner(identity.privateKey), 
-      resolver: new Resolver(getResolver(providerConfig))
-    })
-
-    
-    credentials.authenticateDisclosureResponse(jwt).then(creds => {
-
-      const push = transports.push.send(creds.pushToken, creds.boxPub)
-
-      // quando creiamo una credentials dobbiamo avere embed il credentialStatus (vedi ethr-registry-status) dentro il payload usando did-jwt ? 
-      credentials.createVerification({
-        //sub: 'did:ethr:0x31486054a6ad2c0b685cd89ce0ba018e210d504e', //application did 
-        sub: req.params.did, //TODO: se non c'è nei param lo prendo dal jwt 
-        exp: Math.floor(new Date().getTime() / 1000) + 30 * 24 * 60 * 60,
-        claim: {
-          'Identity' : {'Last Seen' : `${new Date()}`}, 
-          'Role': { 'User Role': req.params.credentialType } 
-        }      
-      }).then(attestation => {
-        
-        console.log(`\nEncoded JWT sent to user: ${attestation}\n`)
-        return push(attestation)  // *push* the notification to the user's uPort mobile app.
-
-      }).then(res => {
-        
-        console.log('Push notification sent and should be recieved any moment...')
-        console.log('Accept the push notification in the uPort mobile application')
-      
-      }).catch(e => { console.log(e) })
-    })
-  }*/
-
-  /**
-   * GET /credential - nel body i dati della credential (da capire come fare)   
-   */
-  /*
-
-  addCredentialByAuthentication: RequestHandler = async (req, res, next) => {
-
-    const credentialType = req.params.credentialType;
-    console.log('addCredentialByAuthentication. CredentialType: ' + credentialType);
-
-    console.log('addCredentialByAuthentication');      
-    const context_path = config.getContextPath;
-    const callbackUrl = `https://${req.get('host')}${context_path}/did/callback/${credentialType}` 
-    console.log(callbackUrl)
-    const reqToken = await this.credentials.createDisclosureRequest({
-      // TODO: claims Requirements for claims requested from a user. See Claims Specs and Verified Claims
-      notifications: true,
-      callbackUrl,
-      //verified: ['role']
-    })
-    logger.debug('reqToken: ' + reqToken)
-
-    const query = message.messageToURI(reqToken)
-    const uri = message.paramsToQueryString(query, { callback_type: 'post' })
-    const qr = transports.ui.getImageDataURI(uri)
-
-    logger.debug('Login interaction received')
-    
-    const options = {
-
-    }
-
-    return res.render('login', {
-      ...options, qr
-    })
-  }*/
 
 }

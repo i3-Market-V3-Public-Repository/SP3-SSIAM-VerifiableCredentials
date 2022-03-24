@@ -6,13 +6,12 @@ import { URL } from 'url'
 import config from './config'
 import logger, { loggerMiddleware } from './logger'
 import { addEndpoint } from './endpoint'
-import WebSocketServer from './ws'
 import { jwks, did } from './security'
 
-import { apiSpecEndpoint, credentialEndpoint, didEndpoint } from './routes'
-/// ///////
+import { apiSpecEndpoint, credentialEndpoint, issuerEndpoint, presentationEndpoint } from './routes'
 
-async function listenPromise (server: http.Server, port: number): Promise<void> {
+async function listenPromise (server: http.Server, port: Number): Promise<void> {
+
   return await new Promise((resolve) => server.listen(port, () => {
     resolve()
   }))
@@ -27,8 +26,10 @@ export async function main (): Promise<void> {
     logger.info('Using production environment')
   }
 
-
-  const port = config.port
+  let port = config.port
+  if(config.port === NaN) {
+    port = 4200
+  }
 
   // Connect to ngrok
   if (config.isProd && config.useNgrok) {
@@ -54,7 +55,6 @@ export async function main (): Promise<void> {
   // Initialize express
   const app = express()
   const server = http.createServer(app)
-  const wss = new WebSocketServer(server)
 
   // View
   app.set('views', path.join(__dirname, 'views'))
@@ -64,8 +64,8 @@ export async function main (): Promise<void> {
 
 
   // Add middlewares
+  
   app.use(loggerMiddleware)
-
   /**
    * TODO:
    * Force proto https if reverse proxy. Header x-forwarded-proto must be setted by the proxy
@@ -81,23 +81,22 @@ export async function main (): Promise<void> {
   }
 
   // Add endpoints
-  addEndpoint(app, wss, '/api-spec', await apiSpecEndpoint(app, wss))
-  addEndpoint(app, wss, '/credential', await credentialEndpoint(app, wss))
-  addEndpoint(app, wss, '/did', await didEndpoint(app, wss))
-
+  addEndpoint(app, `${config.getContextPath}/api-spec`, await apiSpecEndpoint(app))
+  addEndpoint(app, `${config.getContextPath}/credential`, await credentialEndpoint(app))
+  addEndpoint(app, `${config.getContextPath}/issuer`, await issuerEndpoint(app))
+  addEndpoint(app, `${config.getContextPath}/presentation`, await presentationEndpoint(app))
 
   // Add static files (css and js)
   const publicDir = path.resolve(__dirname, 'public')
   app.use('/', express.static(publicDir))
 
   // Listen
-  
   await listenPromise(server, port)
-
 
   // Log connection information
   logger.info(`Application is listening on port ${config.port}`)  
-  logger.info(`OpenAPI browsable spec at ${publicUri}/api-spec/ui`)
+  logger.info(`OpenAPI JSON spec at ${publicUri}${config.getContextPath}/api-spec/openapi.json`)
+  logger.info(`OpenAPI browsable spec at ${publicUri}${config.getContextPath}/api-spec/ui`)
 }
 
 export function onError (reason?: Error): void {

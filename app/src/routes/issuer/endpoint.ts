@@ -1,7 +1,7 @@
-import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
+import { RequestHandler, Router as AppRouter /*, urlencoded*/ } from 'express'
 
 import { EndpointLoader } from '../../endpoint'
-import CredentialController from './controller'
+import IssuerController from './controller'
 
 function nextIfError (handler: RequestHandler): RequestHandler {
   return async (req, res, next) => {
@@ -15,12 +15,10 @@ const setNoCache: RequestHandler = (req, res, next) => {
   next()
 }
 
-const body = urlencoded({ extended: false })
-
 const endpoint: EndpointLoader = async (app) => {
   const appRouter = AppRouter()
-  const basicRouter = AppRouter()
-  const controller = new CredentialController()  
+  const controller = new IssuerController()
+  //const body = urlencoded({ extended: false })
 
   // Wait controller initialization
   await controller.initialize()
@@ -41,13 +39,14 @@ const endpoint: EndpointLoader = async (app) => {
     next()
   })
 
-  // Veramo routes
-  appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
-  appRouter.get('/issue/:credential/callbackUrl/:callbackUrl', setNoCache, nextIfError(controller.addVeramoCredential)) 
-  appRouter.get('/issue/:did/:credential', setNoCache, nextIfError(controller.addCredentialByDidAndCredentialString)) 
-  basicRouter.post('/revoke', setNoCache, body, nextIfError(controller.revokeCredentialByJWT))
-  basicRouter.post('/verify', setNoCache, body, nextIfError(controller.verifyCredentialByJWT))
+  // Setup app routes
+  appRouter.get('/subscribe', setNoCache, nextIfError(controller.subscribeIssuer))
+  appRouter.get('/unsubscribe', setNoCache, nextIfError(controller.unsubscribeIssuer))
+  appRouter.get('/verify', setNoCache, nextIfError(controller.verifyTrustedIssuer))
   
-  return { appRouter, basicRouter }
+  // Handle errors
+  // appRouter.use(controller.onError)
+
+  return { appRouter }
 }
 export default endpoint
