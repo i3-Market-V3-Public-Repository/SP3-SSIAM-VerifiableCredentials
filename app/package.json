@@ -82,7 +82,7 @@
     "ngrok": "^3.4.0",
     "oidc-provider": "^6.29.5",
     "path-to-regexp": "^6.2.0",
-    "sqlite3": "^5.0.2",
+    "sqlite3": "^4.2.0",
     "swagger-ui-express": "^4.3.0",
     "web-did-resolver": "^2.0.4",
     "web3": "1.6.0",
