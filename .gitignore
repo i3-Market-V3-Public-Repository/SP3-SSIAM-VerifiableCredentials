@@ -18,3 +18,7 @@ app/src/routes/api-spec/api.json
 app/dist/
 
 ganache-volumes/
+
+app/.npmrc
+
+app/digest_generator.js
