@@ -22,3 +22,5 @@ ganache-volumes/
 app/.npmrc
 
 app/digest_generator.js
+
+app/database.sqlite
