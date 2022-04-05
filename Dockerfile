@@ -12,8 +12,6 @@ COPY ./docker/template ./docker/entrypoint ./docker/init-volumes /usr/local/bin/
 COPY ./app/misc/whitelist.js /app/misc/
 COPY ./app/misc/credential-registry.json /app/misc/
 COPY ./app/misc/issuer-registry.json /app/misc/
-COPY ./app/misc/identity.json /app/misc/
-COPY ./app/misc/jwks.json /app/misc/
 
 
 WORKDIR /app

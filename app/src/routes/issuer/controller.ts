@@ -22,80 +22,8 @@ export default class IssuerController {
 
     // initialize issuer registry contract
     this.identity = await config.identityPromise;    
-    this.smartcontract = {
-      "abi": [
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "truster",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "issuer",
-            "type": "address"
-          }
-        ],
-        "name": "Trusted",
-        "type": "event"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "addIssuer",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "isTrusted",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "removeIssuer",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }
-    ]
-  };
+    this.smartcontract = await config.issuerRegistryAbiPromise;
+
     Contract.setProvider(config.rpcUrl); 
     this.contractAddress = config.smartContractIssuers;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
@@ -109,23 +37,30 @@ export default class IssuerController {
       this.veramoIdentity = await agent.didManagerGetByAlias({
         alias: 'VCservice',
         provider: 'did:ethr:i3m'
-      })        
-    } catch (error) {      
+      })
+      logger.debug('Found an identity in the Veramo database')
+    } catch (error) {
+      logger.debug(error)
+      logger.debug('Creating a new Veramo identity from identity.json ...')
+
       this.veramoIdentity = await agent.didManagerImport({
-        did: `did:ethr:i3m:${this.identity.did}`,
+        
+        did: `did:ethr:i3m:${this.identity.did.substring(9)}`,
         keys: [{
           type: 'Secp256k1',
-          kid: this.identity.did.substring(2),
-          publicKeyHex: this.identity.did.substring(2),
-          privateKeyHex: this.identity.privateKey.substring(2),
+          kid: this.identity.did.substring(11),
+          publicKeyHex: this.identity.did.substring(11),
+          privateKeyHex: this.identity.privateKey,
           kms: 'local'
         }],
-        controllerKeyId: this.identity.did.substring(2),
+        controllerKeyId: this.identity.did.substring(11),
         provider: 'did:ethr:i3m',
         alias: 'VCservice',
         services: []
-      })
+      })      
+      logger.debug('New veramo identity created')
     }
+    
   }
   
 
