@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express'
 import { ethers } from 'ethers'
 import { IIdentifier } from '@veramo/core'
-import { agent } from './../credential/agent'
-import config from '../../config'
-import logger from '../../logger'
+import { agent } from '@i3-market/routes/credential/agent'
+import config from '@i3-market/config'
+import logger from '@i3-market/logger'
 
 const web3 = require("web3");
 var Contract = require('web3-eth-contract');
@@ -22,80 +22,8 @@ export default class IssuerController {
 
     // initialize issuer registry contract
     this.identity = await config.identityPromise;    
-    this.smartcontract = {
-      "abi": [
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "truster",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "issuer",
-            "type": "address"
-          }
-        ],
-        "name": "Trusted",
-        "type": "event"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "addIssuer",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "isTrusted",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "removeIssuer",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }
-    ]
-  };
+    this.smartcontract = await config.issuerRegistryAbiPromise;
+
     Contract.setProvider(config.rpcUrl); 
     this.contractAddress = config.smartContractIssuers;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
@@ -109,23 +37,30 @@ export default class IssuerController {
       this.veramoIdentity = await agent.didManagerGetByAlias({
         alias: 'VCservice',
         provider: 'did:ethr:i3m'
-      })        
-    } catch (error) {      
+      })
+      logger.info('Found an identity in the Veramo database')
+    } catch (error) {
+      logger.info(error)
+      logger.info('Creating a new Veramo identity from identity.json ...')
+
       this.veramoIdentity = await agent.didManagerImport({
-        did: `did:ethr:i3m:${this.identity.did}`,
+        
+        did: `did:ethr:i3m:${this.identity.did.substring(9)}`,
         keys: [{
           type: 'Secp256k1',
-          kid: this.identity.did.substring(2),
-          publicKeyHex: this.identity.did.substring(2),
-          privateKeyHex: this.identity.privateKey.substring(2),
+          kid: this.identity.did.substring(11),
+          publicKeyHex: this.identity.did.substring(11),
+          privateKeyHex: this.identity.privateKey,
           kms: 'local'
         }],
-        controllerKeyId: this.identity.did.substring(2),
+        controllerKeyId: this.identity.did.substring(11),
         provider: 'did:ethr:i3m',
         alias: 'VCservice',
         services: []
-      })
+      })      
+      logger.info('New veramo identity created')
     }
+    
   }
   
 
@@ -155,13 +90,13 @@ export default class IssuerController {
 
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
 
-      logger.debug('transactionResponse')
-      logger.debug(JSON.stringify(transactionResponse))
+      logger.info('transactionResponse')
+      logger.info(JSON.stringify(transactionResponse))
 
       const receipt = await transactionResponse.wait();
 
-      logger.debug('receipt')
-      logger.debug(JSON.stringify(receipt))
+      logger.info('receipt')
+      logger.info(JSON.stringify(receipt))
 
       res.send({
         message: 'issuer subscribed successfully',
@@ -211,13 +146,13 @@ export default class IssuerController {
 
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
 
-      logger.debug('transactionResponse')
-      logger.debug(JSON.stringify(transactionResponse))
+      logger.info('transactionResponse')
+      logger.info(JSON.stringify(transactionResponse))
 
       const receipt = await transactionResponse.wait();
 
-      logger.debug('receipt')
-      logger.debug(JSON.stringify(receipt))
+      logger.info('receipt')
+      logger.info(JSON.stringify(receipt))
 
       res.send({
         message: 'issuer unsubscribed successfully',

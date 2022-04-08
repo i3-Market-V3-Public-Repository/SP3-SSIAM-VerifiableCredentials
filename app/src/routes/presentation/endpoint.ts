@@ -1,6 +1,6 @@
 import { RequestHandler, Router as AppRouter, urlencoded } from 'express'
 
-import { EndpointLoader } from '../../endpoint'
+import { EndpointLoader } from '@i3-market/endpoint'
 import PresentationController from './controller'
 
 function nextIfError (handler: RequestHandler): RequestHandler {

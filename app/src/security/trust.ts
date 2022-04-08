@@ -1,4 +1,4 @@
-import config from '../config'
+import config from '@i3-market/config'
 
 export const trust = {
   /**

@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express'
 
-import logger from '../../logger'
-import config from '../../config'
+import logger from '@i3-market/logger'
+import config from '@i3-market/config'
 
 import { agent } from './agent'
 import { Issuer } from 'did-jwt-vc'
@@ -33,148 +33,16 @@ export default class CredentialController {
     // initialize credential registry contract
     Contract.setProvider(config.rpcUrl); 
     this.identity = await config.identityPromise;
-    this.smartcontract = {
-      "abi": [
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "issuer",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "bytes32",
-            "name": "digest",
-            "type": "bytes32"
-          }
-        ],
-        "name": "Revoked",
-        "type": "event"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {
-            "internalType": "bytes32",
-            "name": "digest",
-            "type": "bytes32"
-          }
-        ],
-        "name": "revoke",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "issuer",
-            "type": "address"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "digest",
-            "type": "bytes32"
-          }
-        ],
-        "name": "revoked",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-      }
-    ]
-    };       
-    
+    this.smartcontract = await config.smartcontractAbiPromise;
+    console.log(this.smartcontract)
+
     this.contractAddress = config.smartContractRegistry;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
-    this.smartcontractIssuer = {
-      "abi": [
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "truster",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "issuer",
-            "type": "address"
-          }
-        ],
-        "name": "Trusted",
-        "type": "event"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "addIssuer",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "constant": true,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "isTrusted",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "constant": false,
-        "inputs": [
-          {
-            "internalType": "address",
-            "name": "_wallet",
-            "type": "address"
-          }
-        ],
-        "name": "removeIssuer",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }
-    ]
-    };    
+    
+    this.smartcontractIssuer = await config.issuerRegistryAbiPromise;    
     this.contractAddressIssuer = config.smartContractIssuers;
+    console.log(this.smartcontractIssuer)
+
     this.contractIssuer = new Contract(this.smartcontractIssuer.abi, this.contractAddressIssuer);
 
     // initialize ethers js rpc
@@ -185,27 +53,28 @@ export default class CredentialController {
       this.veramoIdentity = await agent.didManagerGetByAlias({
         alias: 'VCservice',
         provider: 'did:ethr:i3m'
-      })  
+      })
+      logger.info('Found an identity in the Veramo database')
     } catch (error) {
-      logger.error(error)
-      logger.debug('Identity not found in the Veramo database. Creating a new Veramo identity from identity.json ...')
+      logger.info(error)
+      logger.info('Creating a new Veramo identity from identity.json ...')
 
       this.veramoIdentity = await agent.didManagerImport({
-        did: `did:ethr:i3m:${this.identity.did}`,
+        
+        did: `did:ethr:i3m:${this.identity.did.substring(9)}`,
         keys: [{
           type: 'Secp256k1',
-          kid: this.identity.did.substring(2),
-          publicKeyHex: this.identity.did.substring(2),
-          privateKeyHex: this.identity.privateKey.substring(2),
+          kid: this.identity.did.substring(11),
+          publicKeyHex: this.identity.did.substring(11),
+          privateKeyHex: this.identity.privateKey,
           kms: 'local'
         }],
-        controllerKeyId: this.identity.did.substring(2),
+        controllerKeyId: this.identity.did.substring(11),
         provider: 'did:ethr:i3m',
         alias: 'VCservice',
         services: []
-      })
-
-      logger.debug('New identity created')
+      })      
+      logger.info('New veramo identity created')
     }
     
   }
@@ -302,8 +171,8 @@ export default class CredentialController {
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
       const receipt = await transactionResponse.wait();
 
-      // logger.debug('receipt')
-      // logger.debug(JSON.stringify(receipt))
+      // logger.info('receipt')
+      // logger.info(JSON.stringify(receipt))
 
       res.send({
         message: 'credential revoked successfully',
