@@ -2,8 +2,8 @@ import * as express from 'express'
 import { middleware as openapiValidator } from 'express-openapi-validator'
 import swaggerUI from 'swagger-ui-express'
 
-import { EndpointLoader } from '../../endpoint'
-import config from '../../config'
+import { EndpointLoader } from '@i3-market/endpoint'
+import config from '@i3-market/config'
 
 import openapiSpec from './api.json'
 import { errorMiddleware } from './error-middleware'

@@ -1,10 +1,10 @@
 import generateKeyPair from 'jose/util/generate_key_pair'
 import fromKeyLike, { JWK } from 'jose/jwk/from_key_like'
 import { AsymmetricSigningAlgorithm } from 'oidc-provider'
-import config from '../config'
+import config from '@i3-market/config'
 import { PathLike, writeFile } from 'fs'
 import path from 'path'
-import logger from '../logger'
+import logger from '@i3-market/logger'
 
 
 const rootDir = path.resolve(__dirname, '../..')

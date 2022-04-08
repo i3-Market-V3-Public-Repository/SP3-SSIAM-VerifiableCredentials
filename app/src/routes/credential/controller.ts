@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express'
 
-import logger from '../../logger'
-import config from '../../config'
+import logger from '@i3-market/logger'
+import config from '@i3-market/config'
 
 import { agent } from './agent'
 import { Issuer } from 'did-jwt-vc'
@@ -34,13 +34,15 @@ export default class CredentialController {
     Contract.setProvider(config.rpcUrl); 
     this.identity = await config.identityPromise;
     this.smartcontract = await config.smartcontractAbiPromise;
-    
+    console.log(this.smartcontract)
+
     this.contractAddress = config.smartContractRegistry;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
     
     this.smartcontractIssuer = await config.issuerRegistryAbiPromise;    
     this.contractAddressIssuer = config.smartContractIssuers;
-    
+    console.log(this.smartcontractIssuer)
+
     this.contractIssuer = new Contract(this.smartcontractIssuer.abi, this.contractAddressIssuer);
 
     // initialize ethers js rpc
@@ -52,10 +54,10 @@ export default class CredentialController {
         alias: 'VCservice',
         provider: 'did:ethr:i3m'
       })
-      logger.debug('Found an identity in the Veramo database')
+      logger.info('Found an identity in the Veramo database')
     } catch (error) {
-      logger.debug(error)
-      logger.debug('Creating a new Veramo identity from identity.json ...')
+      logger.info(error)
+      logger.info('Creating a new Veramo identity from identity.json ...')
 
       this.veramoIdentity = await agent.didManagerImport({
         
@@ -72,7 +74,7 @@ export default class CredentialController {
         alias: 'VCservice',
         services: []
       })      
-      logger.debug('New veramo identity created')
+      logger.info('New veramo identity created')
     }
     
   }
@@ -169,8 +171,8 @@ export default class CredentialController {
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
       const receipt = await transactionResponse.wait();
 
-      // logger.debug('receipt')
-      // logger.debug(JSON.stringify(receipt))
+      // logger.info('receipt')
+      // logger.info(JSON.stringify(receipt))
 
       res.send({
         message: 'credential revoked successfully',

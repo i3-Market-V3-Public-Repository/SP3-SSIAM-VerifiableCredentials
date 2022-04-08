@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express'
 import { ethers } from 'ethers'
 import { IIdentifier } from '@veramo/core'
-import { agent } from './../credential/agent'
-import config from '../../config'
-import logger from '../../logger'
+import { agent } from '@i3-market/routes/credential/agent'
+import config from '@i3-market/config'
+import logger from '@i3-market/logger'
 
 const web3 = require("web3");
 var Contract = require('web3-eth-contract');
@@ -38,10 +38,10 @@ export default class IssuerController {
         alias: 'VCservice',
         provider: 'did:ethr:i3m'
       })
-      logger.debug('Found an identity in the Veramo database')
+      logger.info('Found an identity in the Veramo database')
     } catch (error) {
-      logger.debug(error)
-      logger.debug('Creating a new Veramo identity from identity.json ...')
+      logger.info(error)
+      logger.info('Creating a new Veramo identity from identity.json ...')
 
       this.veramoIdentity = await agent.didManagerImport({
         
@@ -58,7 +58,7 @@ export default class IssuerController {
         alias: 'VCservice',
         services: []
       })      
-      logger.debug('New veramo identity created')
+      logger.info('New veramo identity created')
     }
     
   }
@@ -90,13 +90,13 @@ export default class IssuerController {
 
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
 
-      logger.debug('transactionResponse')
-      logger.debug(JSON.stringify(transactionResponse))
+      logger.info('transactionResponse')
+      logger.info(JSON.stringify(transactionResponse))
 
       const receipt = await transactionResponse.wait();
 
-      logger.debug('receipt')
-      logger.debug(JSON.stringify(receipt))
+      logger.info('receipt')
+      logger.info(JSON.stringify(receipt))
 
       res.send({
         message: 'issuer subscribed successfully',
@@ -146,13 +146,13 @@ export default class IssuerController {
 
       const transactionResponse = await this.provider.sendTransaction(signedTransaction);
 
-      logger.debug('transactionResponse')
-      logger.debug(JSON.stringify(transactionResponse))
+      logger.info('transactionResponse')
+      logger.info(JSON.stringify(transactionResponse))
 
       const receipt = await transactionResponse.wait();
 
-      logger.debug('receipt')
-      logger.debug(JSON.stringify(receipt))
+      logger.info('receipt')
+      logger.info(JSON.stringify(receipt))
 
       res.send({
         message: 'issuer unsubscribed successfully',

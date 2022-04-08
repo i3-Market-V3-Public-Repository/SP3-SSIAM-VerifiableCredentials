@@ -1,6 +1,5 @@
 import { RequestHandler } from 'express'
-// import logger from '../../logger'
-import config from '../../config'
+import config from '@i3-market/config'
 
 import { Issuer } from 'did-jwt-vc'
 var Contract = require('web3-eth-contract');
