@@ -34,15 +34,12 @@ export default class CredentialController {
     Contract.setProvider(config.rpcUrl); 
     this.identity = await config.identityPromise;
     this.smartcontract = await config.smartcontractAbiPromise;
-    console.log(this.smartcontract)
-
+    
     this.contractAddress = config.smartContractRegistry;
     this.contract = new Contract(this.smartcontract.abi, this.contractAddress);
     
     this.smartcontractIssuer = await config.issuerRegistryAbiPromise;    
-    this.contractAddressIssuer = config.smartContractIssuers;
-    console.log(this.smartcontractIssuer)
-
+    this.contractAddressIssuer = config.smartContractIssuers;    
     this.contractIssuer = new Contract(this.smartcontractIssuer.abi, this.contractAddressIssuer);
 
     // initialize ethers js rpc

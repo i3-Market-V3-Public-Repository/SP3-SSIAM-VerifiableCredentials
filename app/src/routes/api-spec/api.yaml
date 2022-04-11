@@ -28,27 +28,27 @@ servers:
       description: context path
 
 paths:
-  /credential:    
-    get:
-      summary: Get the credential list
-      description: Get the credential list
-      tags:
-        - Credential          
-      responses:
-        200:
-          description: Credential list
-          content:
-            application/json:
-              schema: 
-                type: array
-                items: 
-                  type: string
-        500:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "./schema/error.yaml#/Error"
+  #/credential:    
+  #  get:
+  #    summary: Get the credential list
+  #    description: Get the credential list
+  #    tags:
+  #      - Credential          
+  #    responses:
+  #      200:
+  #        description: Credential list
+  #        content:
+  #          application/json:
+  #            schema: 
+  #              type: array
+  #              items: 
+  #                type: string
+  #      500:
+  #        description: unexpected error
+  #        content:
+  #          application/json:
+  #            schema:
+  #              $ref: "./schema/error.yaml#/Error"
 
   /credential/issue/{credential}/callbackUrl/{callbackUrl}:    
     get:
