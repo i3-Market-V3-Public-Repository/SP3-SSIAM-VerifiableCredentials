@@ -190,11 +190,13 @@ export default class IssuerController {
       if(blockNumber === '0') {        
         res.send({ 
           status: 1,
+          issuer,
           message: 'untrusted issuer' 
         })
       } else {
         res.send({ 
           status: 0,
+          issuer,
           message: 'trusted issuer', 
           transactionNumber: blockNumber
         })
