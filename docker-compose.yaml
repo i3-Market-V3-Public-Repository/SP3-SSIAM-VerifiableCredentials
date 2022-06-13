@@ -1,19 +1,21 @@
-version: '3.4'
+version: '3.6'
 
 services:
-  vc-service-prod:
-    image: i3market/verifiable-credentials
-    container_name: vc-service-prod
+
+  vc-service:
+    image: registry.gitlab.com/i3-market/code/wp3/t3.1-self-sovereign-identity-and-access-management/verifiable-credentials:release-2.9.4
+    container_name: vc-service
     restart: unless-stopped
     ports:
-      - "4200:4200"
+      - 4200:4200
     env_file:
-      - .env.vc
-    networks:
-      - reverse-proxy
+      - vc.env
     volumes:
       - ./volumes/misc:/app/misc
+      - ./volumes/database.sqlite:/app/database.sqlite
+    networks:
+      - reverse-proxy
 
-networks:  
+networks:
   reverse-proxy:
     external: true
