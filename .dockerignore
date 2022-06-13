@@ -1,1 +1,5 @@
 .vscode
+app/misc/identity.json
+app/misc/jwks.json
+app/database.sqlite
+app/digest_generator.json

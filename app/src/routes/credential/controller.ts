@@ -237,7 +237,7 @@ export default class CredentialController {
         console.log(blockNumberIssuer)
         res.send({ 
           status: 0,
-          message: 'credential not revoked' 
+          message: 'credential not revoked and the issuer is valid' 
         })
       } else {
         res.send({ 

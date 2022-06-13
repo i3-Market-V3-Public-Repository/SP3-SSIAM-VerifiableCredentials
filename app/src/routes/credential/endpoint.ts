@@ -42,7 +42,7 @@ const endpoint: EndpointLoader = async (app) => {
   })
 
   // Veramo routes
-  appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
+  // appRouter.get('/', setNoCache, nextIfError(controller.getCredentialList)) 
   appRouter.get('/issue/:credential/callbackUrl/:callbackUrl', setNoCache, nextIfError(controller.addVeramoCredential)) 
   appRouter.get('/issue/:did/:credential', setNoCache, nextIfError(controller.addCredentialByDidAndCredentialString)) 
   basicRouter.post('/revoke', setNoCache, body, nextIfError(controller.revokeCredentialByJWT))

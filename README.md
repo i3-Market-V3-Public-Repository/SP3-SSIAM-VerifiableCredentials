@@ -1,6 +1,7 @@
 # i3-Market Verifiable Credential Service
 
-The service for issuing, verifying and revoking W3C Verifiable Credential in i3-Market.
+The service for issuing, verifying and revoking W3C Verifiable Credential in i3-Market. 
+You can find the detailed documentation [here](https://i3-market.gitlab.io/code/backplane/backplane-api-gateway/backplane-api-specification/systems/trust-security-privacy/ssi-iam/user-centric-authentication.html#troubleshooting).
 
 ## Installation
 
@@ -11,7 +12,18 @@ $ git clone git@gitlab.com:i3-market/code/wp3/t3.1-self-sovereign-identity-and-a
 $ cd verifiable-credentials
 ```
 
-### Usage
+## Local development
+
+```console 
+$ cd verifiable-credentials/app
+$ npm i
+$ npm start
+```
+
+You should update the configuration file `app/src/config.ts` before running the service. Specifically, it is necessary to fill the default environment variables. 
+
+
+## Local development using docker
 
 Run the following command in the project root. The first time it will take a while (be patience), since it has to build images and download all the npn dependencies.
 
@@ -61,3 +73,14 @@ The script `docker-prod` manages the deployment. You can use it to extract the f
 Create a `.env.vc` file and configure the server using the environmental variables defined in (template.env)[./template.env].
 
 > WARNING: Paths should be relative to the `app` directory
+
+## Server deployment
+
+To deploy this service in a server it is just necessary to copy the `docker-compose.yaml` and `vc.env` files in a server directory and run the following command:
+
+```console
+$ docker-compose up
+```
+
+The service images will be downloaded directly from the i3-Market Gitlab image registry.
+You need to have a valid Gitlab access.
