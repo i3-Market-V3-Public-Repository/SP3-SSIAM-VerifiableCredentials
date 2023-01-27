@@ -76,7 +76,7 @@
     "morgan": "^1.10.0",
     "ngrok": "^3.4.0",
     "npm": "^8.11.0",
-    "oidc-provider": "^6.29.5",
+    "oidc-provider": "^8.1.0",
     "path-to-regexp": "^6.2.0",
     "sqlite3": "^4.2.0",
     "swagger-ui-express": "^4.3.0",
