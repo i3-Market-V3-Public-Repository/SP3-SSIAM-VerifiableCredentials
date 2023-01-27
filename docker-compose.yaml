@@ -3,7 +3,7 @@ version: '3.6'
 services:
 
   vc-service:
-    image: registry.gitlab.com/i3-market/code/wp3/t3.1-self-sovereign-identity-and-access-management/verifiable-credentials:release-2.9.4
+    image: registry.gitlab.com/i3-market/code/wp3/t3.1-self-sovereign-identity-and-access-management/verifiable-credentials:release-2.9.5
     container_name: vc-service
     restart: unless-stopped
     ports:
