@@ -1,4 +1,4 @@
-FROM node:lts-hydrogen AS builder
+FROM node:hydrogen AS builder
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
