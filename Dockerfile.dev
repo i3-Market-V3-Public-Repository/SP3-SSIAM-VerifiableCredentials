@@ -1,4 +1,4 @@
-FROM node:lts-hydrogen AS builder
+FROM node:18.20.2-bookworm AS builder
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
